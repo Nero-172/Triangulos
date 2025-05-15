@@ -8,7 +8,7 @@ public class Configuracion {
     private boolean largoVariado;
     private int cantidadBandas;
     private int cantidadTableros;
-    
+    // HOLA QUE TAL
     // Constructor por defecto
     public Configuracion() {
         this.requiereContacto = false;

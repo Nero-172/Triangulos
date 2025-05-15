@@ -1,9 +1,5 @@
 package triangulos;
-/**
- * Clase que representa una banda elástica en el tablero
- * @author Tu Nombre
- * @author Tu Número
- */
+
 public class Banda {
     private Punto inicio;
     private Punto fin;
