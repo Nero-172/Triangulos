@@ -20,31 +20,7 @@ public class Triangulo {
     
     // Calcula el punto central del triángulo
     private Punto calcularCentro() {
-        // Verificar si es un triángulo horizontal
-        if (p1.getFila() == p2.getFila() && p2.getFila() == p3.getFila()) {
-            // Ordenar los puntos por columna
-            Punto[] puntos = {p1, p2, p3};
-            ordenarPuntosPorColumna(puntos);
-            
-            // El centro es el punto del medio
-            return puntos[1];
-        }
-        
-        // Verificar si es un triángulo con dos puntos en la misma fila
-        if (p1.getFila() == p2.getFila()) {
-            // El centro está en la misma columna que p3, pero en la fila de p1/p2
-            return new Punto(p3.getColumna(), p1.getFila());
-        }
-        if (p1.getFila() == p3.getFila()) {
-            // El centro está en la misma columna que p2, pero en la fila de p1/p3
-            return new Punto(p2.getColumna(), p1.getFila());
-        }
-        if (p2.getFila() == p3.getFila()) {
-            // El centro está en la misma columna que p1, pero en la fila de p2/p3
-            return new Punto(p1.getColumna(), p2.getFila());
-        }
-        
-        // Para triángulos más complejos, calcular el baricentro (promedio de coordenadas)
+        // Para triángulos, el centro es el baricentro (promedio de coordenadas)
         int filaPromedio = Math.round((p1.getFila() + p2.getFila() + p3.getFila()) / 3.0f);
         char columnaPromedio = (char) Math.round((p1.getColumna() + p2.getColumna() + p3.getColumna()) / 3.0);
         
@@ -55,19 +31,6 @@ public class Triangulo {
         
         // Si no se puede determinar un centro válido, devolver null
         return null;
-    }
-    
-    // Ordena un array de puntos por columna (de menor a mayor)
-    private void ordenarPuntosPorColumna(Punto[] puntos) {
-        for (int i = 0; i < puntos.length - 1; i++) {
-            for (int j = 0; j < puntos.length - i - 1; j++) {
-                if (puntos[j].getColumna() > puntos[j + 1].getColumna()) {
-                    Punto temp = puntos[j];
-                    puntos[j] = puntos[j + 1];
-                    puntos[j + 1] = temp;
-                }
-            }
-        }
     }
     
     public Punto getPunto1() {

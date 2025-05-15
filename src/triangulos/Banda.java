@@ -27,6 +27,7 @@ public class Banda {
         return esBlanco;
     }
     
+    // Mejorar el método pasaPorPunto para detectar correctamente los puntos en las bandas diagonales
     public boolean pasaPorPunto(Punto punto) {
         // Verificar si el punto está en los extremos
         if (inicio.equals(punto) || fin.equals(punto)) {
@@ -47,9 +48,17 @@ public class Banda {
             return false;
         }
         
-        // Para bandas diagonales
-        // Verificar si el punto está en la línea entre inicio y fin
+        // Para bandas verticales (Norte-Sur)
+        if (deltaCol == 0) {
+            if (punto.getColumna() == inicio.getColumna()) {
+                int filaMin = Math.min(inicio.getFila(), fin.getFila());
+                int filaMax = Math.max(inicio.getFila(), fin.getFila());
+                return punto.getFila() >= filaMin && punto.getFila() <= filaMax;
+            }
+            return false;
+        }
         
+        // Para bandas diagonales
         // Si es una diagonal perfecta (45 grados)
         if (Math.abs(deltaCol) == Math.abs(deltaFila)) {
             // Determinar la dirección
@@ -60,13 +69,9 @@ public class Banda {
             char col = inicio.getColumna();
             int fila = inicio.getFila();
             
-            while (true) {
+            while (col != fin.getColumna() || fila != fin.getFila()) {
                 if (col == punto.getColumna() && fila == punto.getFila()) {
                     return true;
-                }
-                
-                if (col == fin.getColumna() && fila == fin.getFila()) {
-                    break; // Llegamos al final sin encontrar el punto
                 }
                 
                 col += pasoCol;
@@ -77,28 +82,10 @@ public class Banda {
         return false;
     }
     
-    // Determina la dirección de la banda
-    public char getDireccionVisual() {
-        int deltaCol = fin.getColumna() - inicio.getColumna();
-        int deltaFila = fin.getFila() - inicio.getFila();
-        
-        // Si es horizontal (Este-Oeste)
-        if (deltaFila == 0) {
-            return '-';
-        }
-        
-        // Si es diagonal Noreste (E) o Suroeste (Z)
-        if ((deltaCol > 0 && deltaFila < 0) || (deltaCol < 0 && deltaFila > 0)) {
-            return '/';
-        }
-        // Si es diagonal Noroeste (Q) o Sureste (C)
-        else {
-            return '\\';
-        }
-    }
-    
     @Override
     public String toString() {
         return "Banda de " + inicio + " a " + fin;
     }
 }
+
+

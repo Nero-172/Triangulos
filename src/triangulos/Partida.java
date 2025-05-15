@@ -105,7 +105,7 @@ public class Partida {
                 // Mostrar tablero actualizado
                 mostrarTableros();
                 
-                // Para depuración
+                // Mostrar información de bandas
                 System.out.println("\n--- BANDAS EN EL TABLERO ---");
                 for (int i = 0; i < tablero.getBandas().size(); i++) {
                     Banda b = tablero.getBandas().get(i);
@@ -192,6 +192,24 @@ public class Partida {
         }
         
         Punto inicio = new Punto(columna, fila);
+        
+        // Imprimir información de depuración con dirección en texto
+        String direccionTexto = "";
+        switch (direccion) {
+            case 'Q': direccionTexto = "Noroeste (arriba-izquierda)"; break;
+            case 'E': direccionTexto = "Noreste (arriba-derecha)"; break;
+            case 'D': direccionTexto = "Este (derecha)"; break;
+            case 'C': direccionTexto = "Sureste (abajo-derecha)"; break;
+            case 'Z': direccionTexto = "Suroeste (abajo-izquierda)"; break;
+            case 'A': direccionTexto = "Oeste (izquierda)"; break;
+        }
+        
+        System.out.println("DEBUG - Jugada: Desde " + inicio + " en dirección " + direccion + " (" + direccionTexto + ") con longitud " + longitud);
+        
+        // Calcular y mostrar el punto final para verificación
+        Punto fin = calcularPuntoFinal(inicio, direccion, longitud);
+        System.out.println("DEBUG - Punto final: " + fin);
+        
         return new Jugada(inicio, direccion, longitud, turnoBlanco);
     }
     
@@ -204,21 +222,21 @@ public class Partida {
         Punto inicio = jugada.getInicio();
         
         // Verificar si el punto inicial está dentro del tablero hexagonal
-        if (!esPuntoValido(inicio)) {
-            System.out.println("DEBUG: Punto inicial inválido: " + inicio);
+        if (!tablero.esPuntoValido(inicio)) {
+            System.out.println("DEBUG - Punto inicial inválido: " + inicio);
             return false;
         }
         
         // Calcular el punto final
         Punto fin = calcularPuntoFinal(inicio, jugada.getDireccion(), jugada.getLongitud());
         if (fin == null) {
-            System.out.println("DEBUG: Punto final es null");
+            System.out.println("DEBUG - No se pudo calcular el punto final");
             return false;
         }
         
         // Verificar si el punto final está dentro del tablero hexagonal
-        if (!esPuntoValido(fin)) {
-            System.out.println("DEBUG: Punto final inválido: " + fin);
+        if (!tablero.esPuntoValido(fin)) {
+            System.out.println("DEBUG - Punto final inválido: " + fin);
             return false;
         }
         
@@ -226,7 +244,7 @@ public class Partida {
         if (config.isRequiereContacto() && jugadas.size() > 0) {
             boolean tieneContacto = tablero.tieneContacto(inicio) || tablero.tieneContacto(fin);
             if (!tieneContacto) {
-                System.out.println("DEBUG: No tiene contacto con bandas existentes");
+                System.out.println("DEBUG - No tiene contacto con otras bandas");
             }
             return tieneContacto;
         }
@@ -234,40 +252,22 @@ public class Partida {
         return true;
     }
     
-    // Método para verificar si un punto está dentro del tablero hexagonal
-    private boolean esPuntoValido(Punto punto) {
-        int fila = punto.getFila();
-        char columna = punto.getColumna();
-        
-        // Verificar límites básicos
-        if (fila < 1 || fila > 7 || columna < 'A' || columna > 'M') {
-            return false;
-        }
-        
-        // Verificar si está dentro del patrón hexagonal
-        int desplazamiento = Math.abs(4 - fila);
-        char colMin = (char)('A' + desplazamiento);
-        char colMax = (char)('M' - desplazamiento);
-        
-        return columna >= colMin && columna <= colMax;
-    }
-    
     private Punto calcularPuntoFinal(Punto inicio, char direccion, int longitud) {
         char columnaInicio = inicio.getColumna();
         int filaInicio = inicio.getFila();
         
         switch (direccion) {
-            case 'Q': // Noroeste
+            case 'Q': // Noroeste (arriba-izquierda)
                 return new Punto((char)(columnaInicio - longitud), filaInicio - longitud);
-            case 'E': // Noreste
+            case 'E': // Noreste (arriba-derecha)
                 return new Punto((char)(columnaInicio + longitud), filaInicio - longitud);
-            case 'D': // Este
+            case 'D': // Este (derecha)
                 return new Punto((char)(columnaInicio + longitud), filaInicio);
-            case 'C': // Sureste
+            case 'C': // Sureste (abajo-derecha)
                 return new Punto((char)(columnaInicio + longitud), filaInicio + longitud);
-            case 'Z': // Suroeste
+            case 'Z': // Suroeste (abajo-izquierda)
                 return new Punto((char)(columnaInicio - longitud), filaInicio + longitud);
-            case 'A': // Oeste
+            case 'A': // Oeste (izquierda)
                 return new Punto((char)(columnaInicio - longitud), filaInicio);
             default:
                 return null;
@@ -345,3 +345,6 @@ public class Partida {
         return ganador;
     }
 }
+
+
+
