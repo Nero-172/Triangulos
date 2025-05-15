@@ -302,6 +302,10 @@ public class Tablero {
         }
         System.out.println();
         
+        // Agregar dos líneas de separación entre el encabezado y el tablero
+        System.out.println();
+        System.out.println();
+        
         // Imprimir el tablero
         // Imprimir el tablero
         for (int i = 0; i < filaVisualMax; i++) {
