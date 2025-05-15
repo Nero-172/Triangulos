@@ -8,12 +8,82 @@ public class Triangulo {
     private Punto p1;
     private Punto p2;
     private Punto p3;
+    private Punto centro; // Punto central del triángulo
     private boolean esBlanco; // true si fue ganado por el jugador blanco
     
     public Triangulo(Punto p1, Punto p2, Punto p3) {
         this.p1 = p1;
         this.p2 = p2;
         this.p3 = p3;
+        this.centro = calcularCentro();
+    }
+    
+    // Calcula el punto central del triángulo
+    private Punto calcularCentro() {
+        // Verificar si es un triángulo horizontal
+        if (p1.getFila() == p2.getFila() && p2.getFila() == p3.getFila()) {
+            // Ordenar los puntos por columna
+            Punto[] puntos = {p1, p2, p3};
+            ordenarPuntosPorColumna(puntos);
+            
+            // El centro es el punto del medio
+            return puntos[1];
+        }
+        
+        // Verificar si es un triángulo con dos puntos en la misma fila
+        if (p1.getFila() == p2.getFila()) {
+            // El centro está en la misma columna que p3, pero en la fila de p1/p2
+            return new Punto(p3.getColumna(), p1.getFila());
+        }
+        if (p1.getFila() == p3.getFila()) {
+            // El centro está en la misma columna que p2, pero en la fila de p1/p3
+            return new Punto(p2.getColumna(), p1.getFila());
+        }
+        if (p2.getFila() == p3.getFila()) {
+            // El centro está en la misma columna que p1, pero en la fila de p2/p3
+            return new Punto(p1.getColumna(), p2.getFila());
+        }
+        
+        // Para triángulos más complejos, calcular el baricentro (promedio de coordenadas)
+        int filaPromedio = Math.round((p1.getFila() + p2.getFila() + p3.getFila()) / 3.0f);
+        char columnaPromedio = (char) Math.round((p1.getColumna() + p2.getColumna() + p3.getColumna()) / 3.0);
+        
+        // Verificar si el punto calculado está dentro del tablero
+        if (columnaPromedio >= 'A' && columnaPromedio <= 'M' && filaPromedio >= 1 && filaPromedio <= 7) {
+            return new Punto(columnaPromedio, filaPromedio);
+        }
+        
+        // Si no se puede determinar un centro válido, devolver null
+        return null;
+    }
+    
+    // Ordena un array de puntos por columna (de menor a mayor)
+    private void ordenarPuntosPorColumna(Punto[] puntos) {
+        for (int i = 0; i < puntos.length - 1; i++) {
+            for (int j = 0; j < puntos.length - i - 1; j++) {
+                if (puntos[j].getColumna() > puntos[j + 1].getColumna()) {
+                    Punto temp = puntos[j];
+                    puntos[j] = puntos[j + 1];
+                    puntos[j + 1] = temp;
+                }
+            }
+        }
+    }
+    
+    public Punto getPunto1() {
+        return p1;
+    }
+    
+    public Punto getPunto2() {
+        return p2;
+    }
+    
+    public Punto getPunto3() {
+        return p3;
+    }
+    
+    public Punto getCentro() {
+        return centro;
     }
     
     public void setEsBlanco(boolean esBlanco) {

@@ -25,6 +25,10 @@ public class Tablero {
         this.triangulos = new ArrayList<>(otro.triangulos);
     }
     
+    public List<Banda> getBandas() {
+        return bandas;
+    }
+    
     public int colocarBanda(Punto inicio, char direccion, int longitud, boolean esBlanco) {
         Punto fin = calcularPuntoFinal(inicio, direccion, longitud);
         Banda nuevaBanda = new Banda(inicio, fin, esBlanco);
@@ -69,6 +73,13 @@ public class Tablero {
                         posibleTriangulo.setEsBlanco(esBlanco);
                         triangulos.add(posibleTriangulo);
                         nuevosTriangulos++;
+                        
+                        // Imprimir información sobre el triángulo formado
+                        System.out.println("¡Se ha formado un triángulo! Puntos: " + 
+                                          posibleTriangulo.getPunto1() + ", " + 
+                                          posibleTriangulo.getPunto2() + ", " + 
+                                          posibleTriangulo.getPunto3() + 
+                                          ", Centro: " + posibleTriangulo.getCentro());
                     }
                 }
             }
@@ -123,11 +134,59 @@ public class Tablero {
     
     public boolean tieneContacto(Punto punto) {
         for (Banda banda : bandas) {
-            if (banda.getInicio().equals(punto) || banda.getFin().equals(punto)) {
+            if (banda.pasaPorPunto(punto)) {
                 return true;
             }
         }
         return false;
+    }
+    
+    // Verifica si un punto está dentro del tablero hexagonal
+    public boolean esPuntoValido(Punto punto) {
+        int fila = punto.getFila();
+        char columna = punto.getColumna();
+        
+        // Verificar límites básicos
+        if (fila < 1 || fila > FILAS || columna < 'A' || columna > 'M') {
+            return false;
+        }
+        
+        // Verificar si está dentro del patrón hexagonal
+        int desplazamiento = Math.abs(4 - fila);
+        char colMin = (char)('A' + desplazamiento);
+        char colMax = (char)('M' - desplazamiento);
+        
+        return columna >= colMin && columna <= colMax;
+    }
+    
+    // Determina qué carácter usar para representar una banda en un punto específico
+    private char obtenerCaracterBanda(Punto punto) {
+        for (Banda banda : bandas) {
+            if (banda.pasaPorPunto(punto)) {
+                // Determinar la dirección de la banda
+                Punto inicio = banda.getInicio();
+                Punto fin = banda.getFin();
+                
+                // Si es horizontal (Este-Oeste)
+                if (inicio.getFila() == fin.getFila()) {
+                    return '-';
+                }
+                
+                // Si es diagonal
+                int deltaCol = fin.getColumna() - inicio.getColumna();
+                int deltaFila = fin.getFila() - inicio.getFila();
+                
+                // Diagonal Noreste (E) o Suroeste (Z)
+                if ((deltaCol > 0 && deltaFila < 0) || (deltaCol < 0 && deltaFila > 0)) {
+                    return '/';
+                }
+                // Diagonal Noroeste (Q) o Sureste (C)
+                else {
+                    return '\\';
+                }
+            }
+        }
+        return '*'; // Punto sin banda
     }
     
     public void mostrar() {
@@ -145,41 +204,94 @@ public class Tablero {
         }
         System.out.println();
         
-        // Imprimir filas
+        // Imprimir filas con el patrón hexagonal
         for (int fila = 1; fila <= FILAS; fila++) {
+            // Añadir línea en blanco para estirar verticalmente (excepto en modo compacto)
+            if (!compacto && fila > 1) {
+                System.out.println();
+            }
+            
             System.out.print(fila + " ");
             
-            for (char col = 'A'; col <= 'M'; col++) {
+            // Calcular el desplazamiento para esta fila
+            int desplazamiento = Math.abs(4 - fila);
+            
+            // Añadir espacios iniciales según el desplazamiento
+            for (int i = 0; i < desplazamiento; i++) {
+                System.out.print("  ");
+            }
+            
+            // Determinar cuántas columnas mostrar en esta fila
+            int columnasEnFila = COLUMNAS - 2 * desplazamiento;
+            
+            for (int colIndex = 0; colIndex < columnasEnFila; colIndex++) {
+                char col = (char)('A' + colIndex + desplazamiento);
                 Punto punto = new Punto(col, fila);
                 
-                // Verificar si hay un triángulo en este punto
-                boolean hayTriangulo = false;
-                boolean esTrianguloBlanco = false;
+                // Verificar si el punto es el centro de algún triángulo
+                boolean esCentroTriangulo = false;
+                boolean esCentroBlanco = false;
                 
                 for (Triangulo t : triangulos) {
-                    if (t.contienePunto(punto)) {
-                        hayTriangulo = true;
-                        esTrianguloBlanco = t.esBlanco();
+                    if (t.getCentro() != null && t.getCentro().equals(punto)) {
+                        esCentroTriangulo = true;
+                        esCentroBlanco = t.esBlanco();
                         break;
                     }
                 }
                 
-                if (hayTriangulo) {
-                    System.out.print(esTrianguloBlanco ? " □" : " ■");
+                if (esCentroTriangulo) {
+                    System.out.print(esCentroBlanco ? " □" : " ■");
                 } else {
-                    // Verificar si hay una banda que pasa por este punto
-                    boolean hayBanda = false;
-                    for (Banda b : bandas) {
-                        if (b.pasaPorPunto(punto)) {
-                            hayBanda = true;
+                    // Verificar si hay un triángulo en este punto (vértice)
+                    boolean hayTriangulo = false;
+                    boolean esTrianguloBlanco = false;
+                    
+                    for (Triangulo t : triangulos) {
+                        if (t.contienePunto(punto)) {
+                            hayTriangulo = true;
+                            esTrianguloBlanco = t.esBlanco();
                             break;
                         }
                     }
                     
-                    if (hayBanda) {
-                        System.out.print(" -"); // MODIFICAR ESTO PARA QUE SE PUEDA EN DIAGONALES, VERTICALES, HORIZONTALES
+                    if (hayTriangulo) {
+                        // No mostrar los vértices del triángulo como cuadrados
+                        // En su lugar, mostrar la banda
+                        boolean hayBanda = false;
+                        char caracterBanda = '*';
+                        
+                        for (Banda b : bandas) {
+                            if (b.pasaPorPunto(punto)) {
+                                hayBanda = true;
+                                caracterBanda = obtenerCaracterBanda(punto);
+                                break;
+                            }
+                        }
+                        
+                        if (hayBanda) {
+                            System.out.print(" " + caracterBanda);
+                        } else {
+                            System.out.print(" *");
+                        }
                     } else {
-                        System.out.print(" *");
+                        // Verificar si hay una banda que pasa por este punto
+                        boolean hayBanda = false;
+                        char caracterBanda = '*';
+                        
+                        for (Banda b : bandas) {
+                            if (b.pasaPorPunto(punto)) {
+                                hayBanda = true;
+                                caracterBanda = obtenerCaracterBanda(punto);
+                                break;
+                            }
+                        }
+                        
+                        if (hayBanda) {
+                            System.out.print(" " + caracterBanda);
+                        } else {
+                            System.out.print(" *");
+                        }
                     }
                 }
             }

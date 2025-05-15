@@ -105,6 +105,14 @@ public class Partida {
                 // Mostrar tablero actualizado
                 mostrarTableros();
                 
+                // Para depuración
+                System.out.println("\n--- BANDAS EN EL TABLERO ---");
+                for (int i = 0; i < tablero.getBandas().size(); i++) {
+                    Banda b = tablero.getBandas().get(i);
+                    System.out.println((i + 1) + ". De " + b.getInicio() + " a " + b.getFin() + 
+                                      " (" + (b.esBlanco() ? "Blanco" : "Negro") + ")");
+                }
+                
                 // Cambiar turno
                 turnoBlanco = !turnoBlanco;
                 
@@ -193,26 +201,55 @@ public class Partida {
     }
     
     private boolean esJugadaValida(Jugada jugada) {
-        // Verificar si el punto inicial está dentro del tablero
         Punto inicio = jugada.getInicio();
-        if (inicio.getColumna() < 'A' || inicio.getColumna() > 'M' || 
-            inicio.getFila() < 1 || inicio.getFila() > 7) {
+        
+        // Verificar si el punto inicial está dentro del tablero hexagonal
+        if (!esPuntoValido(inicio)) {
+            System.out.println("DEBUG: Punto inicial inválido: " + inicio);
             return false;
         }
         
-        // Verificar si el punto final está dentro del tablero
+        // Calcular el punto final
         Punto fin = calcularPuntoFinal(inicio, jugada.getDireccion(), jugada.getLongitud());
-        if (fin == null || fin.getColumna() < 'A' || fin.getColumna() > 'M' || 
-            fin.getFila() < 1 || fin.getFila() > 7) {
+        if (fin == null) {
+            System.out.println("DEBUG: Punto final es null");
+            return false;
+        }
+        
+        // Verificar si el punto final está dentro del tablero hexagonal
+        if (!esPuntoValido(fin)) {
+            System.out.println("DEBUG: Punto final inválido: " + fin);
             return false;
         }
         
         // Verificar si requiere contacto (a partir del 2do movimiento)
         if (config.isRequiereContacto() && jugadas.size() > 0) {
-            return tablero.tieneContacto(inicio) || tablero.tieneContacto(fin);
+            boolean tieneContacto = tablero.tieneContacto(inicio) || tablero.tieneContacto(fin);
+            if (!tieneContacto) {
+                System.out.println("DEBUG: No tiene contacto con bandas existentes");
+            }
+            return tieneContacto;
         }
         
         return true;
+    }
+    
+    // Método para verificar si un punto está dentro del tablero hexagonal
+    private boolean esPuntoValido(Punto punto) {
+        int fila = punto.getFila();
+        char columna = punto.getColumna();
+        
+        // Verificar límites básicos
+        if (fila < 1 || fila > 7 || columna < 'A' || columna > 'M') {
+            return false;
+        }
+        
+        // Verificar si está dentro del patrón hexagonal
+        int desplazamiento = Math.abs(4 - fila);
+        char colMin = (char)('A' + desplazamiento);
+        char colMax = (char)('M' - desplazamiento);
+        
+        return columna >= colMin && columna <= colMax;
     }
     
     private Punto calcularPuntoFinal(Punto inicio, char direccion, int longitud) {
@@ -268,39 +305,34 @@ public class Partida {
     
     private void mostrarAnimacionVictoria() {
         System.out.println("\n¡VICTORIA PARA " + (ganador == jugadorBlanco ? "BLANCO" : "NEGRO") + "!");
-
-        // ANSI colores
+        
+        // Colores ANSI
         final String RESET = "\u001B[0m";
-        final String[] colores = {
-            "\u001B[31m", "\u001B[32m", "\u001B[33m", 
-            "\u001B[34m", "\u001B[35m", "\u001B[36m"
-        };
-
-        String[] fuego = {
-            "   *   ",
-            "  ***  ",
-            " ***** ",
-            "  ***  ",
-            "   *   "
-        };
-
+        final String RED = "\u001B[31m";
+        final String GREEN = "\u001B[32m";
+        final String YELLOW = "\u001B[33m";
+        final String BLUE = "\u001B[34m";
+        final String PURPLE = "\u001B[35m";
+        final String CYAN = "\u001B[36m";
+        
+        String[] colores = {RED, GREEN, YELLOW, BLUE, PURPLE, CYAN};
+        
         try {
-            for (int i = 0; i < 15; i++) {
-                System.out.print("\033[H\033[2J");
+            for (int i = 0; i < 20; i++) {
+                System.out.print("\033[H\033[2J");  // Limpiar pantalla
                 System.out.flush();
-
-                for (int j = 0; j < 5; j++) {
-                    int x = 10 + (int) (Math.random() * 60);
-                    int y = 3 + (int) (Math.random() * 15);
+                
+                // Dibujar fuegos artificiales en posiciones aleatorias
+                for (int j = 0; j < 10; j++) {
+                    int x = (int) (Math.random() * 80);
+                    int y = (int) (Math.random() * 20);
                     String color = colores[(int) (Math.random() * colores.length)];
-
-                    for (int k = 0; k < fuego.length; k++) {
-                        System.out.print("\033[" + (y + k) + ";" + x + "H");
-                        System.out.print(color + fuego[k] + RESET);
-                    }
+                    
+                    System.out.print("\033[" + y + ";" + x + "H");
+                    System.out.print(color + "*" + RESET);
                 }
-
-                Thread.sleep(200);
+                
+                TimeUnit.MILLISECONDS.sleep(200);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -308,9 +340,6 @@ public class Partida {
             System.out.print(RESET);
         }
     }
-
-
-
     
     public Jugador getGanador() {
         return ganador;

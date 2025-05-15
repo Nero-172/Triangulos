@@ -1,5 +1,9 @@
 package triangulos;
-
+/**
+ * Clase que representa una banda elástica en el tablero
+ * @author Tu Nombre
+ * @author Tu Número
+ */
 public class Banda {
     private Punto inicio;
     private Punto fin;
@@ -29,40 +33,72 @@ public class Banda {
             return true;
         }
         
-        // Verificar si el punto está en la línea entre inicio y fin
-        // Para bandas horizontales
-        if (inicio.getFila() == fin.getFila() && punto.getFila() == inicio.getFila()) {
-            char colMin = (char) Math.min(inicio.getColumna(), fin.getColumna());
-            char colMax = (char) Math.max(inicio.getColumna(), fin.getColumna());
-            return punto.getColumna() >= colMin && punto.getColumna() <= colMax;
-        }
+        // Obtener las diferencias
+        int deltaCol = fin.getColumna() - inicio.getColumna();
+        int deltaFila = fin.getFila() - inicio.getFila();
         
-        // Para bandas verticales
-        if (inicio.getColumna() == fin.getColumna() && punto.getColumna() == inicio.getColumna()) {
-            int filaMin = Math.min(inicio.getFila(), fin.getFila());
-            int filaMax = Math.max(inicio.getFila(), fin.getFila());
-            return punto.getFila() >= filaMin && punto.getFila() <= filaMax;
+        // Para bandas horizontales (Este-Oeste)
+        if (deltaFila == 0) {
+            if (punto.getFila() == inicio.getFila()) {
+                char colMin = (char) Math.min(inicio.getColumna(), fin.getColumna());
+                char colMax = (char) Math.max(inicio.getColumna(), fin.getColumna());
+                return punto.getColumna() >= colMin && punto.getColumna() <= colMax;
+            }
+            return false;
         }
         
         // Para bandas diagonales
-        if (Math.abs(fin.getColumna() - inicio.getColumna()) == Math.abs(fin.getFila() - inicio.getFila())) {
-            // Determinar la dirección de la diagonal
-            int pasoFila = inicio.getFila() < fin.getFila() ? 1 : -1;
-            int pasoColumna = inicio.getColumna() < fin.getColumna() ? 1 : -1;
+        // Verificar si el punto está en la línea entre inicio y fin
+        
+        // Si es una diagonal perfecta (45 grados)
+        if (Math.abs(deltaCol) == Math.abs(deltaFila)) {
+            // Determinar la dirección
+            int pasoFila = deltaFila > 0 ? 1 : -1;
+            int pasoCol = deltaCol > 0 ? 1 : -1;
             
-            // Recorrer la diagonal
+            // Recorrer la diagonal desde el inicio
             char col = inicio.getColumna();
             int fila = inicio.getFila();
             
-            while (col != fin.getColumna() && fila != fin.getFila()) {
+            while (true) {
                 if (col == punto.getColumna() && fila == punto.getFila()) {
                     return true;
                 }
-                col += pasoColumna;
+                
+                if (col == fin.getColumna() && fila == fin.getFila()) {
+                    break; // Llegamos al final sin encontrar el punto
+                }
+                
+                col += pasoCol;
                 fila += pasoFila;
             }
         }
         
         return false;
+    }
+    
+    // Determina la dirección de la banda
+    public char getDireccionVisual() {
+        int deltaCol = fin.getColumna() - inicio.getColumna();
+        int deltaFila = fin.getFila() - inicio.getFila();
+        
+        // Si es horizontal (Este-Oeste)
+        if (deltaFila == 0) {
+            return '-';
+        }
+        
+        // Si es diagonal Noreste (E) o Suroeste (Z)
+        if ((deltaCol > 0 && deltaFila < 0) || (deltaCol < 0 && deltaFila > 0)) {
+            return '/';
+        }
+        // Si es diagonal Noroeste (Q) o Sureste (C)
+        else {
+            return '\\';
+        }
+    }
+    
+    @Override
+    public String toString() {
+        return "Banda de " + inicio + " a " + fin;
     }
 }
