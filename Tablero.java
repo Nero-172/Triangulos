@@ -251,9 +251,12 @@ public class Tablero {
                 int colMin = Math.min(colInicioVisual, colFinVisual);
                 int colMax = Math.max(colInicioVisual, colFinVisual);
                 
-                for (int col = colMin + 1; col < colMax; col++) {
-                    tableroVisual[filaVisual][col] = '-';
+                 for (int col = colMin + 1; col < colMax; col++) {
+                    if (tableroVisual[filaVisual][col] == ' ') {
+                        tableroVisual[filaVisual][col] = '-';
+                    }
                 }
+                
             } else if (deltaCol == 0) {
                 // Banda vertical (Norte-Sur)
                 int colVisual = colInicioVisual;
