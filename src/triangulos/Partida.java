@@ -6,6 +6,7 @@ package triangulos;
  */
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
@@ -20,6 +21,7 @@ public class Partida {
     private int triangulosNegro;
     private Jugador ganador;
     private List<Tablero> historialTableros;
+    private Random random;
     
     public Partida(Jugador jugadorBlanco, Jugador jugadorNegro, Configuracion config) {
         this.jugadorBlanco = jugadorBlanco;
@@ -32,6 +34,7 @@ public class Partida {
         this.triangulosNegro = 0;
         this.ganador = null;
         this.historialTableros = new ArrayList<>();
+        this.random = new Random();
         
         // Guardar el tablero inicial
         if (config.getCantidadTableros() > 1) {
@@ -303,41 +306,84 @@ public class Partida {
         }
     }
     
+    // Método optimizado para mostrar dos fuegos artificiales en una línea
     private void mostrarAnimacionVictoria() {
-        System.out.println("\n¡VICTORIA PARA " + (ganador == jugadorBlanco ? "BLANCO" : "NEGRO") + "!");
-        
         // Colores ANSI
         final String RESET = "\u001B[0m";
-        final String RED = "\u001B[31m";
-        final String GREEN = "\u001B[32m";
-        final String YELLOW = "\u001B[33m";
-        final String BLUE = "\u001B[34m";
-        final String PURPLE = "\u001B[35m";
-        final String CYAN = "\u001B[36m";
+        final String[] COLORES = {
+            "\u001B[31m", // Rojo
+            "\u001B[32m", // Verde
+            "\u001B[33m", // Amarillo
+            "\u001B[34m", // Azul
+            "\u001B[35m", // Púrpura
+            "\u001B[36m"  // Cian
+        };
         
-        String[] colores = {RED, GREEN, YELLOW, BLUE, PURPLE, CYAN};
+        // Patrón de fuegos artificiales (más pequeño)
+        final String[] PATRON = {
+            "   *   ",
+            " * * * ",
+            "*  *  *",
+            " * * * ",
+            "   *   "
+        };
         
         try {
-            for (int i = 0; i < 20; i++) {
-                System.out.print("\033[H\033[2J");  // Limpiar pantalla
-                System.out.flush();
+            // Limpiar la pantalla con líneas en blanco
+            for (int i = 0; i < 3; i++) {
+                System.out.println();
+            }
+            
+            // Mostrar dos fuegos artificiales en una línea con colores diferentes
+            String color1 = COLORES[random.nextInt(COLORES.length)];
+            String color2 = COLORES[random.nextInt(COLORES.length)];
+            
+            // Asegurarse de que los colores sean diferentes
+            while (color1.equals(color2)) {
+                color2 = COLORES[random.nextInt(COLORES.length)];
+            }
+            
+            // Construir y mostrar la línea con los dos fuegos artificiales
+            for (String linea : PATRON) {
+                StringBuilder lineaCompleta = new StringBuilder();
                 
-                // Dibujar fuegos artificiales en posiciones aleatorias
-                for (int j = 0; j < 10; j++) {
-                    int x = (int) (Math.random() * 80);
-                    int y = (int) (Math.random() * 20);
-                    String color = colores[(int) (Math.random() * colores.length)];
-                    
-                    System.out.print("\033[" + y + ";" + x + "H");
-                    System.out.print(color + "*" + RESET);
+                // Primer fuego artificial
+                for (char c : linea.toCharArray()) {
+                    if (c == '*') {
+                        lineaCompleta.append(color1).append(c).append(RESET);
+                    } else {
+                        lineaCompleta.append(c);
+                    }
                 }
                 
-                TimeUnit.MILLISECONDS.sleep(200);
+                // Espacio entre los fuegos artificiales
+                lineaCompleta.append("     ");
+                
+                // Segundo fuego artificial
+                for (char c : linea.toCharArray()) {
+                    if (c == '*') {
+                        lineaCompleta.append(color2).append(c).append(RESET);
+                    } else {
+                        lineaCompleta.append(c);
+                    }
+                }
+                
+                System.out.println(lineaCompleta.toString());
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } finally {
-            System.out.print(RESET);
+            
+            // Mensaje del ganador centrado
+            String mensaje = "¡" + ganador.getNombre() + " ha ganado!";
+            StringBuilder lineaCentrada = new StringBuilder();
+            for (int i = 0; i < (PATRON[0].length() * 2 + 5 - mensaje.length()) / 2; i++) {
+                lineaCentrada.append(" ");
+            }
+            lineaCentrada.append(mensaje);
+            
+            System.out.println("\n" + lineaCentrada.toString() + "\n");
+            
+        } catch (Exception e) {
+            // En caso de error, mostrar un mensaje simple
+            System.out.println("\n¡" + ganador.getNombre() + " ha ganado!\n");
         }
     }
     
@@ -345,6 +391,3 @@ public class Partida {
         return ganador;
     }
 }
-
-
-
