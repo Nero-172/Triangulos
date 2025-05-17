@@ -1,9 +1,5 @@
 package triangulos;
-/**
- * Clase que representa la configuración de una partida
- * @author Tu Nombre
- * @author Tu Número
- */
+
 public class Configuracion {
     private boolean requiereContacto;
     private boolean largoVariado;

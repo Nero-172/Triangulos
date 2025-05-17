@@ -38,7 +38,6 @@ public class Tablero {
         return verificarTriangulos(esBlanco);
     }
     
-    // Método calcularPuntoFinal (correcto)
     private Punto calcularPuntoFinal(Punto inicio, char direccion, int longitud) {
         char columnaInicio = inicio.getColumna();
         int filaInicio = inicio.getFila();
@@ -85,7 +84,8 @@ public class Tablero {
                                               posibleTriangulo.getPunto1() + ", " + 
                                               posibleTriangulo.getPunto2() + ", " + 
                                               posibleTriangulo.getPunto3() + 
-                                              ", Centro: " + posibleTriangulo.getCentro());
+                                              ", Centro: " + posibleTriangulo.getCentro() +
+                                              ", Jugador: " + (esBlanco ? "Blanco" : "Negro"));
                         }
                     }
                 }
@@ -181,7 +181,6 @@ public class Tablero {
         mostrar(false);
     }
     
-    // Método mostrar corregido para visualizar correctamente las bandas diagonales
     public void mostrar(boolean compacto) {
         // Crear una matriz para representar el tablero con espacio para las bandas
         int filaVisualMax = FILAS * 2 - 1;
@@ -221,7 +220,8 @@ public class Tablero {
                 }
                 
                 if (esCentroTriangulo) {
-                    tableroVisual[filaVisual][colVisual] = '□';
+                    // Usar □ para triángulos blancos y ■ para triángulos negros
+                    tableroVisual[filaVisual][colVisual] = esCentroBlanco ? '□' : '■';
                 } else {
                     tableroVisual[filaVisual][colVisual] = '*';
                 }
@@ -328,4 +328,3 @@ public class Tablero {
         }
     }
 }
-

@@ -1,9 +1,4 @@
 package triangulos;
-/**
- * Clase que representa una partida del juego
- * @author Tu Nombre
- * @author Tu Número
- */
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -34,9 +29,8 @@ public class Partida {
         this.triangulosNegro = 0;
         this.ganador = null;
         this.historialTableros = new ArrayList<>();
-        this.random = new Random();
-        
-        // Guardar el tablero inicial
+
+        // Siempre guardar el tablero inicial si se requieren múltiples tableros
         if (config.getCantidadTableros() > 1) {
             historialTableros.add(new Tablero(tablero)); // Copia del tablero inicial
         }
@@ -258,7 +252,7 @@ public class Partida {
     private Punto calcularPuntoFinal(Punto inicio, char direccion, int longitud) {
         char columnaInicio = inicio.getColumna();
         int filaInicio = inicio.getFila();
-        
+
         switch (direccion) {
             case 'Q': // Noroeste (arriba-izquierda)
                 return new Punto((char)(columnaInicio - longitud), filaInicio - longitud);
@@ -278,16 +272,44 @@ public class Partida {
     }
     
     private void mostrarTableros() {
-        if (config.getCantidadTableros() <= 1) {
+        int cantidadAMostrar = config.getCantidadTableros();
+
+        if (cantidadAMostrar <= 1) {
             // Mostrar solo el tablero actual
             tablero.mostrar();
         } else {
-            // Mostrar varios tableros
-            for (int i = 0; i < historialTableros.size(); i++) {
-                if (i > 0) {
-                    System.out.print("   ");
+            System.out.println("\n--- VISUALIZACIÓN DE " + cantidadAMostrar + " TABLEROS ---");
+
+            // Preparar la lista de tableros a mostrar
+            List<Tablero> tablerosAMostrar = new ArrayList<>();
+
+            // Añadir los tableros históricos más recientes primero (irán a la izquierda)
+            if (!historialTableros.isEmpty()) {
+                int inicio = Math.max(0, historialTableros.size() - (cantidadAMostrar - 1));
+                for (int i = inicio; i < historialTableros.size(); i++) {
+                    tablerosAMostrar.add(historialTableros.get(i));
                 }
-                historialTableros.get(i).mostrar(true); // Mostrar en modo compacto
+            }
+
+            // Añadir el tablero actual al final (irá a la derecha)
+            tablerosAMostrar.add(tablero);
+
+            // Imprimir encabezado común para todos los tableros
+            for (int t = 0; t < tablerosAMostrar.size(); t++) {
+                System.out.print("  ");
+                for (char c = 'A'; c <= 'M'; c++) {
+                    System.out.print(c + " ");
+                }
+                if (t < tablerosAMostrar.size() - 1) {
+                    System.out.print("    "); // Espacio entre tableros
+                }
+            }
+            System.out.println("\n");
+
+            // Mostrar los tableros uno al lado del otro (aproximación)
+            for (Tablero t : tablerosAMostrar) {
+                System.out.print("   ");
+                t.mostrar(true); // Usar el método existente con un solo parámetro
             }
         }
     }

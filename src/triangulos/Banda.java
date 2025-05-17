@@ -1,9 +1,4 @@
 package triangulos;
-/**
- * Clase que representa una banda elástica en el tablero
- * @author Tu Nombre
- * @author Tu Número
- */
 public class Banda {
     private Punto inicio;
     private Punto fin;
@@ -27,64 +22,58 @@ public class Banda {
         return esBlanco;
     }
     
-    // Mejorar el método pasaPorPunto para detectar correctamente los puntos en las bandas diagonales
     public boolean pasaPorPunto(Punto punto) {
-        // Verificar si el punto está en los extremos
+        // Verificar si el punto es uno de los extremos
         if (inicio.equals(punto) || fin.equals(punto)) {
             return true;
         }
         
-        // Obtener las diferencias
-        int deltaCol = fin.getColumna() - inicio.getColumna();
-        int deltaFila = fin.getFila() - inicio.getFila();
+        // Verificar si el punto está en la línea entre inicio y fin
+        int deltaFilaTotal = fin.getFila() - inicio.getFila();
+        int deltaColumnaTotal = fin.getColumna() - inicio.getColumna();
         
-        // Para bandas horizontales (Este-Oeste)
-        if (deltaFila == 0) {
-            if (punto.getFila() == inicio.getFila()) {
-                char colMin = (char) Math.min(inicio.getColumna(), fin.getColumna());
-                char colMax = (char) Math.max(inicio.getColumna(), fin.getColumna());
-                return punto.getColumna() >= colMin && punto.getColumna() <= colMax;
-            }
-            return false;
+        // Si la banda es horizontal
+        if (deltaFilaTotal == 0) {
+            return punto.getFila() == inicio.getFila() && 
+                   estaDentroRango(punto.getColumna(), inicio.getColumna(), fin.getColumna());
         }
         
-        // Para bandas verticales (Norte-Sur)
-        if (deltaCol == 0) {
-            if (punto.getColumna() == inicio.getColumna()) {
-                int filaMin = Math.min(inicio.getFila(), fin.getFila());
-                int filaMax = Math.max(inicio.getFila(), fin.getFila());
-                return punto.getFila() >= filaMin && punto.getFila() <= filaMax;
-            }
-            return false;
+        // Si la banda es vertical
+        if (deltaColumnaTotal == 0) {
+            return punto.getColumna() == inicio.getColumna() && 
+                   estaDentroRango(punto.getFila(), inicio.getFila(), fin.getFila());
         }
         
-        // Para bandas diagonales
-        // Si es una diagonal perfecta (45 grados)
-        if (Math.abs(deltaCol) == Math.abs(deltaFila)) {
-            // Determinar la dirección
-            int pasoFila = deltaFila > 0 ? 1 : -1;
-            int pasoCol = deltaCol > 0 ? 1 : -1;
-            
-            // Recorrer la diagonal desde el inicio
-            char col = inicio.getColumna();
-            int fila = inicio.getFila();
-            
-            while (col != fin.getColumna() || fila != fin.getFila()) {
-                if (col == punto.getColumna() && fila == punto.getFila()) {
-                    return true;
-                }
-                
-                col += pasoCol;
-                fila += pasoFila;
-            }
+        // Si la banda es diagonal
+        // Verificar si la pendiente es consistente
+        int deltaFilaPunto = punto.getFila() - inicio.getFila();
+        int deltaColumnaPunto = punto.getColumna() - inicio.getColumna();
+        
+        // Verificar si el punto está en la línea diagonal
+        if (deltaFilaPunto * deltaColumnaTotal == deltaColumnaPunto * deltaFilaTotal) {
+            // Verificar si el punto está dentro del rango de la banda
+            return estaDentroRango(punto.getFila(), inicio.getFila(), fin.getFila()) && 
+                   estaDentroRango(punto.getColumna(), inicio.getColumna(), fin.getColumna());
         }
         
         return false;
     }
     
+    private boolean estaDentroRango(int valor, int limite1, int limite2) {
+        int min = Math.min(limite1, limite2);
+        int max = Math.max(limite1, limite2);
+        return valor >= min && valor <= max;
+    }
+    
+    private boolean estaDentroRango(char valor, char limite1, char limite2) {
+        char min = (char)Math.min(limite1, limite2);
+        char max = (char)Math.max(limite1, limite2);
+        return valor >= min && valor <= max;
+    }
+    
     @Override
     public String toString() {
-        return "Banda de " + inicio + " a " + fin;
+        return inicio.toString() + " -> " + fin.toString();
     }
 }
 

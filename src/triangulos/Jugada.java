@@ -1,9 +1,5 @@
 package triangulos;
-/**
- * Clase que representa una jugada realizada
- * @author Tu Nombre
- * @author Tu Número
- */
+
 public class Jugada {
     private Punto inicio;
     private char direccion;

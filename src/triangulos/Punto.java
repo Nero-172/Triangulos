@@ -1,9 +1,5 @@
 package triangulos;
-/**
- * Clase que representa un punto en el tablero
- * @author Tu Nombre
- * @author Tu Número
- */
+
 public class Punto {
     private char columna; // A-M
     private int fila; // 1-7

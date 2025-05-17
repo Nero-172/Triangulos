@@ -1,9 +1,5 @@
 package triangulos;
-/**
- * Clase que representa un triángulo formado en el tablero
- * @author Tu Nombre
- * @author Tu Número
- */
+
 public class Triangulo {
     private Punto p1;
     private Punto p2;
@@ -36,17 +32,21 @@ public class Triangulo {
     public Punto getPunto1() {
         return p1;
     }
-    
+
     public Punto getPunto2() {
         return p2;
     }
-    
+
     public Punto getPunto3() {
         return p3;
     }
-    
+
     public Punto getCentro() {
-        return centro;
+        // Calcular el centro del triángulo (baricentro)
+        int filaMedia = (p1.getFila() + p2.getFila() + p3.getFila()) / 3;
+        char columnaMedia = (char)((p1.getColumna() + p2.getColumna() + p3.getColumna()) / 3);
+
+        return new Punto(columnaMedia, filaMedia);
     }
     
     public void setEsBlanco(boolean esBlanco) {

@@ -1,9 +1,5 @@
 package triangulos;
-/**
- * Clase que representa el tablero de juego
- * @author Tu Nombre
- * @author Tu Número
- */
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -178,30 +174,88 @@ public class Tablero {
     }
     
     public void mostrar() {
-        mostrar(false);
+        mostrar(false, true);
     }
     
     // Método mostrar corregido para visualizar correctamente las bandas diagonales
-    public void mostrar(boolean compacto) {
+    public void mostrar(boolean compacto, boolean mostrarEncabezado) {
         // Crear una matriz para representar el tablero con espacio para las bandas
         int filaVisualMax = FILAS * 2 - 1;
         int colVisualMax = COLUMNAS * 2 - 1;
         char[][] tableroVisual = new char[filaVisualMax][colVisualMax];
-        
+
         // Inicializar con espacios
         for (int i = 0; i < tableroVisual.length; i++) {
             for (int j = 0; j < tableroVisual[i].length; j++) {
                 tableroVisual[i][j] = ' ';
             }
         }
-        
+
+        // [El resto del código de mostrar() se mantiene igual hasta llegar a la parte de imprimir]
+
+        // Dibujar el tablero
+        if (mostrarEncabezado) {
+            System.out.println();
+
+            // Imprimir encabezado de columnas con espaciado adecuado
+            System.out.print(" ");
+            for (char c = 'A'; c <= 'M'; c++) {
+                System.out.print(c + " ");
+            }
+            System.out.println();
+
+            // Agregar dos líneas de separación entre el encabezado y el tablero
+            System.out.println();
+            System.out.println();
+        }
+
+        // Imprimir el tablero
+        for (int i = 0; i < filaVisualMax; i++) {
+            System.out.print(" ");  // ← No muestra números de fila
+
+            // Imprimir contenido de la fila
+            for (int j = 0; j < colVisualMax; j++) {
+                System.out.print(tableroVisual[i][j]);
+            }
+
+            System.out.println();
+
+            // Si estamos en modo compacto, omitir las filas intermedias
+            if (compacto && i % 2 == 0 && i < filaVisualMax - 1) {
+                i++;
+            }
+        }
+
+        if (!compacto){
+            System.out.println();
+        }
+    }
+
+    // Sobrecarga del método original para mantener compatibilidad
+    public void mostrar(boolean compacto) {
+        mostrar(compacto, true);
+    }
+    
+    // NUEVO
+    public char[][] obtenerRepresentacionVisual() {
+        // Crear una matriz para representar el tablero con espacio para las bandas
+        int filaVisualMax = FILAS * 2 - 1;
+        int colVisualMax = COLUMNAS * 2 - 1;
+        char[][] tableroVisual = new char[filaVisualMax][colVisualMax];
+
+        // Inicializar con espacios
+        for (int i = 0; i < tableroVisual.length; i++) {
+            for (int j = 0; j < tableroVisual[i].length; j++) {
+                tableroVisual[i][j] = ' ';
+            }
+        }
+
         // Colocar asteriscos en los puntos válidos del tablero
         for (int fila = 1; fila <= FILAS; fila++) {
             int desplazamiento = Math.abs(4 - fila);
             char colMin = (char)('A' + desplazamiento);
             char colMax = (char)('M' - desplazamiento);
 
-            // Salta uno y coloca uno
             for (char col = colMin; col <= colMax; col += 2) {
                 Punto punto = new Punto(col, fila);
 
@@ -228,65 +282,64 @@ public class Tablero {
                 }
             }
         }
-        
+
         // Colocar bandas en el tablero
         for (Banda banda : bandas) {
             Punto inicio = banda.getInicio();
             Punto fin = banda.getFin();
-            
+
             // Calcular posiciones en la matriz visual
             int filaInicioVisual = (inicio.getFila() - 1) * 2;
             int colInicioVisual = (inicio.getColumna() - 'A') * 2;
             int filaFinVisual = (fin.getFila() - 1) * 2;
             int colFinVisual = (fin.getColumna() - 'A') * 2;
-            
+
             // Determinar la dirección de la banda
             int deltaFila = fin.getFila() - inicio.getFila();
             int deltaCol = fin.getColumna() - inicio.getColumna();
-            
+
             // Dibujar la banda según su dirección
             if (deltaFila == 0) {
                 // Banda horizontal (Este-Oeste)
                 int filaVisual = filaInicioVisual;
                 int colMin = Math.min(colInicioVisual, colFinVisual);
                 int colMax = Math.max(colInicioVisual, colFinVisual);
-                
-                 for (int col = colMin + 1; col < colMax; col++) {
+
+                for (int col = colMin + 1; col < colMax; col++) {
                     if (tableroVisual[filaVisual][col] == ' ') {
                         tableroVisual[filaVisual][col] = '-';
                     }
                 }
-                
             } else if (deltaCol == 0) {
                 // Banda vertical (Norte-Sur)
                 int colVisual = colInicioVisual;
                 int filaMin = Math.min(filaInicioVisual, filaFinVisual);
                 int filaMax = Math.max(filaInicioVisual, filaFinVisual);
-                
+
                 for (int fila = filaMin + 1; fila < filaMax; fila++) {
                     tableroVisual[fila][colVisual] = '|';
                 }
             } else {
                 // Determinar si es una diagonal Noroeste-Sureste o Noreste-Suroeste
                 boolean esDiagonalNOSE = (deltaCol * deltaFila > 0); // Noroeste-Sureste
-                
+
                 // Calcular los pasos para recorrer la diagonal
                 int pasoFila = (deltaFila > 0) ? 1 : -1;
                 int pasoCol = (deltaCol > 0) ? 1 : -1;
-                
+
                 // Dibujar la diagonal
                 int filaActual = filaInicioVisual;
                 int colActual = colInicioVisual;
-                
+
                 while (filaActual != filaFinVisual || colActual != colFinVisual) {
                     // Avanzar en la dirección diagonal
                     if (filaActual != filaFinVisual) filaActual += pasoFila;
                     if (colActual != colFinVisual) colActual += pasoCol;
-                    
+
                     // Si estamos en un punto intermedio (no en un asterisco), dibujar la banda
                     if (filaActual % 2 != 0 || colActual % 2 != 0) {
-                        if (filaActual >= 0 && filaActual < filaVisualMax && 
-                            colActual >= 0 && colActual < colVisualMax) {
+                        if (filaActual >= 0 && filaActual < tableroVisual.length && 
+                            colActual >= 0 && colActual < tableroVisual[0].length) {
                             // Usar el carácter adecuado según la dirección
                             tableroVisual[filaActual][colActual] = esDiagonalNOSE ? '\\' : '/';
                         }
@@ -294,42 +347,7 @@ public class Tablero {
                 }
             }
         }
-        
-        // Dibujar el tablero
-        System.out.println();
-        
-        // Imprimir encabezado de columnas con espaciado adecuado
-        System.out.print(" ");
-        for (char c = 'A'; c <= 'M'; c++) {
-            System.out.print(c + " ");
-        }
-        System.out.println();
-        
-        // Agregar dos líneas de separación entre el encabezado y el tablero
-        System.out.println();
-        System.out.println();
-        
-        // Imprimir el tablero
-        // Imprimir el tablero
-        for (int i = 0; i < filaVisualMax; i++) {
-            System.out.print(" ");  // ← No muestra números de fila
 
-            // Imprimir contenido de la fila
-            for (int j = 0; j < colVisualMax; j++) {
-                System.out.print(tableroVisual[i][j]);
-            }
-
-            System.out.println();
-
-            // Si estamos en modo compacto, omitir las filas intermedias
-            if (compacto && i % 2 == 0 && i < filaVisualMax - 1) {
-                i++;
-            }
-        }
-        
-        if (!compacto) {
-            System.out.println();
-        }
+        return tableroVisual;
     }
 }
-

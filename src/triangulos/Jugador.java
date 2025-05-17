@@ -1,9 +1,5 @@
 package triangulos;
-/**
- * Clase que representa a un jugador
- * @author Tu Nombre
- * @author Tu Número
- */
+
 public class Jugador {
     private String nombre;
     private int edad;
