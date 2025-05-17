@@ -308,82 +308,60 @@ public class Partida {
     
     // Método optimizado para mostrar dos fuegos artificiales en una línea
     private void mostrarAnimacionVictoria() {
+        System.out.println("\n¡VICTORIA PARA " + (ganador == jugadorBlanco ? "BLANCO" : "NEGRO") + "!");
+
         // Colores ANSI
         final String RESET = "\u001B[0m";
-        final String[] COLORES = {
-            "\u001B[31m", // Rojo
-            "\u001B[32m", // Verde
-            "\u001B[33m", // Amarillo
-            "\u001B[34m", // Azul
-            "\u001B[35m", // Púrpura
-            "\u001B[36m"  // Cian
-        };
-        
-        // Patrón de fuegos artificiales (más pequeño)
-        final String[] PATRON = {
-            "   *   ",
-            " * * * ",
-            "*  *  *",
-            " * * * ",
-            "   *   "
-        };
-        
+        final String RED = "\u001B[31m";
+        final String GREEN = "\u001B[32m";
+        final String YELLOW = "\u001B[33m";
+        final String BLUE = "\u001B[34m";
+        final String PURPLE = "\u001B[35m";
+        final String CYAN = "\u001B[36m";
+
         try {
-            // Limpiar la pantalla con líneas en blanco
-            for (int i = 0; i < 3; i++) {
-                System.out.println();
+            // Mostrar la animación varias veces
+            for (int animacion = 0; animacion < 1; animacion++) {
+
+                // Primer patrón - forma de rombo/estrella con estrellas (más a la derecha)
+                System.out.println("          " + GREEN + "*" + RESET + "     " + 
+                                   PURPLE + "*" + RESET + "     " + 
+                                   GREEN + "*" + RESET);
+                System.out.println("        " + YELLOW + "*" + RESET + "         " + 
+                                   CYAN + "*" + RESET);
+                System.out.println("      " + GREEN + "*" + RESET + "             " + 
+                                   GREEN + "*" + RESET);
+                System.out.println("        " + BLUE + "*" + RESET + "         " + 
+                                   RED + "*" + RESET);
+                System.out.println("          " + PURPLE + "*" + RESET + "     " + 
+                                   YELLOW + "*" + RESET + "     " + 
+                                   PURPLE + "*" + RESET);
+
+                System.out.println(); // Espacio entre patrones
+
+                // Segundo patrón - forma de rombo/estrella con círculos
+                System.out.println("      " + CYAN + "o" + RESET + "     " + 
+                                   RED + "o" + RESET + "     " + 
+                                   CYAN + "o" + RESET);
+                System.out.println("    " + PURPLE + "o" + RESET + "         " + 
+                                   GREEN + "o" + RESET);
+                System.out.println("  " + RED + "o" + RESET + "             " + 
+                                   YELLOW + "o" + RESET);
+                System.out.println("    " + YELLOW + "o" + RESET + "         " + 
+                                   BLUE + "o" + RESET);
+                System.out.println("      " + GREEN + "o" + RESET + "     " + 
+                                   PURPLE + "o" + RESET + "     " + 
+                                   RED + "o" + RESET);
+
+                System.out.println(); // Espacio entre animaciones
+
+                // Pausa entre animaciones
+                TimeUnit.MILLISECONDS.sleep(800);
             }
-            
-            // Mostrar dos fuegos artificiales en una línea con colores diferentes
-            String color1 = COLORES[random.nextInt(COLORES.length)];
-            String color2 = COLORES[random.nextInt(COLORES.length)];
-            
-            // Asegurarse de que los colores sean diferentes
-            while (color1.equals(color2)) {
-                color2 = COLORES[random.nextInt(COLORES.length)];
-            }
-            
-            // Construir y mostrar la línea con los dos fuegos artificiales
-            for (String linea : PATRON) {
-                StringBuilder lineaCompleta = new StringBuilder();
-                
-                // Primer fuego artificial
-                for (char c : linea.toCharArray()) {
-                    if (c == '*') {
-                        lineaCompleta.append(color1).append(c).append(RESET);
-                    } else {
-                        lineaCompleta.append(c);
-                    }
-                }
-                
-                // Espacio entre los fuegos artificiales
-                lineaCompleta.append("     ");
-                
-                // Segundo fuego artificial
-                for (char c : linea.toCharArray()) {
-                    if (c == '*') {
-                        lineaCompleta.append(color2).append(c).append(RESET);
-                    } else {
-                        lineaCompleta.append(c);
-                    }
-                }
-                
-                System.out.println(lineaCompleta.toString());
-            }
-            
-            // Mensaje del ganador centrado
-            String mensaje = "¡" + ganador.getNombre() + " ha ganado!";
-            StringBuilder lineaCentrada = new StringBuilder();
-            for (int i = 0; i < (PATRON[0].length() * 2 + 5 - mensaje.length()) / 2; i++) {
-                lineaCentrada.append(" ");
-            }
-            lineaCentrada.append(mensaje);
-            
-            System.out.println("\n" + lineaCentrada.toString() + "\n");
-            
-        } catch (Exception e) {
-            // En caso de error, mostrar un mensaje simple
-            System.out.println("\n¡" + ganador.getNombre() + " ha ganado!\n");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            System.out.print(RESET);
         }
     }
     
