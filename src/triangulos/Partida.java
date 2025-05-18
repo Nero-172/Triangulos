@@ -2,7 +2,6 @@ package triangulos;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
@@ -17,7 +16,6 @@ public class Partida {
     private int triangulosNegro;
     private Jugador ganador;
     private List<Tablero> historialTableros;
-    private Random random;
     
     public Partida(Jugador jugadorBlanco, Jugador jugadorNegro, Configuracion config) {
         this.jugadorBlanco = jugadorBlanco;
@@ -30,8 +28,8 @@ public class Partida {
         this.triangulosNegro = 0;
         this.ganador = null;
         this.historialTableros = new ArrayList<>();
-
-        // Siempre guardar el tablero inicial si se requieren múltiples tableros
+        
+        // Guardar el tablero inicial
         if (config.getCantidadTableros() > 1) {
             historialTableros.add(new Tablero(tablero)); // Copia del tablero inicial
         }
@@ -41,6 +39,7 @@ public class Partida {
         System.out.println("\n¡Comienza la partida!");
         System.out.println("Jugador Blanco: " + jugadorBlanco.getNombre());
         System.out.println("Jugador Negro: " + jugadorNegro.getNombre());
+        System.out.println("Largo de bandas: " + config.getLargoBanda());
         
         int bandasColocadas = 0;
         boolean partidaTerminada = false;
@@ -52,7 +51,7 @@ public class Partida {
             String jugadorActual = turnoBlanco ? "Blanco (" + jugadorBlanco.getNombre() + ")" : "Negro (" + jugadorNegro.getNombre() + ")";
             System.out.println("\nTurno del jugador " + jugadorActual);
             System.out.println("Triángulos - Blanco: " + triangulasBlanco + " | Negro: " + triangulosNegro);
-            System.out.print("Ingrese jugada (LetraFilaDirecciónCantidad, X para rendirse, H para historial): ");
+            System.out.print("Ingrese jugada (LetraFilaDirección, X para rendirse, H para historial): ");
             
             String entradaJugada = scanner.nextLine().toUpperCase();
             
@@ -103,20 +102,12 @@ public class Partida {
                 // Mostrar tablero actualizado
                 mostrarTableros();
                 
-                // Mostrar información de bandas
-                System.out.println("\n--- BANDAS EN EL TABLERO ---");
-                for (int i = 0; i < tablero.getBandas().size(); i++) {
-                    Banda b = tablero.getBandas().get(i);
-                    System.out.println((i + 1) + ". De " + b.getInicio() + " a " + b.getFin() + 
-                                      " (" + (b.esBlanco() ? "Blanco" : "Negro") + ")");
-                }
-                
                 // Cambiar turno
                 turnoBlanco = !turnoBlanco;
                 
             } catch (Exception e) {
                 System.out.println("Error en la jugada: " + e.getMessage());
-                System.out.println("Formato correcto: LetraFilaDirecciónCantidad (ej: D1C3)");
+                System.out.println("Formato correcto: LetraFilaDirección (ej: D1C)");
             }
         }
         
@@ -171,43 +162,10 @@ public class Partida {
             throw new IllegalArgumentException("Dirección inválida (debe ser Q, E, D, C, Z, A)");
         }
         
-        // Extraer longitud (opcional)
-        int longitud = 4; // Por defecto
-        if (entrada.length() > 3) {
-            try {
-                longitud = Integer.parseInt(entrada.substring(3));
-                if (longitud < 1 || longitud > 4) {
-                    throw new IllegalArgumentException("Longitud inválida (debe ser 1-4)");
-                }
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Longitud inválida");
-            }
-        }
-        
-        // Si no se permite largo variado, forzar a 4
-        if (!config.isLargoVariado()) {
-            longitud = 4;
-        }
+        // Usar el largo configurado
+        int longitud = config.getLargoBanda();
         
         Punto inicio = new Punto(columna, fila);
-        
-        // Imprimir información de depuración con dirección en texto
-        String direccionTexto = "";
-        switch (direccion) {
-            case 'Q': direccionTexto = "Noroeste (arriba-izquierda)"; break;
-            case 'E': direccionTexto = "Noreste (arriba-derecha)"; break;
-            case 'D': direccionTexto = "Este (derecha)"; break;
-            case 'C': direccionTexto = "Sureste (abajo-derecha)"; break;
-            case 'Z': direccionTexto = "Suroeste (abajo-izquierda)"; break;
-            case 'A': direccionTexto = "Oeste (izquierda)"; break;
-        }
-        
-        System.out.println("DEBUG - Jugada: Desde " + inicio + " en dirección " + direccion + " (" + direccionTexto + ") con longitud " + longitud);
-        
-        // Calcular y mostrar el punto final para verificación
-        Punto fin = calcularPuntoFinal(inicio, direccion, longitud);
-        System.out.println("DEBUG - Punto final: " + fin);
-        
         return new Jugada(inicio, direccion, longitud, turnoBlanco);
     }
     
@@ -217,34 +175,23 @@ public class Partida {
     }
     
     private boolean esJugadaValida(Jugada jugada) {
+        // Verificar si el punto inicial está dentro del tablero
         Punto inicio = jugada.getInicio();
-        
-        // Verificar si el punto inicial está dentro del tablero hexagonal
-        if (!tablero.esPuntoValido(inicio)) {
-            System.out.println("DEBUG - Punto inicial inválido: " + inicio);
+        if (inicio.getColumna() < 'A' || inicio.getColumna() > 'M' || 
+            inicio.getFila() < 1 || inicio.getFila() > 7) {
             return false;
         }
         
-        // Calcular el punto final
+        // Verificar si el punto final está dentro del tablero
         Punto fin = calcularPuntoFinal(inicio, jugada.getDireccion(), jugada.getLongitud());
-        if (fin == null) {
-            System.out.println("DEBUG - No se pudo calcular el punto final");
-            return false;
-        }
-        
-        // Verificar si el punto final está dentro del tablero hexagonal
-        if (!tablero.esPuntoValido(fin)) {
-            System.out.println("DEBUG - Punto final inválido: " + fin);
+        if (fin == null || fin.getColumna() < 'A' || fin.getColumna() > 'M' || 
+            fin.getFila() < 1 || fin.getFila() > 7) {
             return false;
         }
         
         // Verificar si requiere contacto (a partir del 2do movimiento)
         if (config.isRequiereContacto() && jugadas.size() > 0) {
-            boolean tieneContacto = tablero.tieneContacto(inicio) || tablero.tieneContacto(fin);
-            if (!tieneContacto) {
-                System.out.println("DEBUG - No tiene contacto con otras bandas");
-            }
-            return tieneContacto;
+            return tablero.tieneContacto(inicio) || tablero.tieneContacto(fin);
         }
         
         return true;
@@ -253,19 +200,19 @@ public class Partida {
     private Punto calcularPuntoFinal(Punto inicio, char direccion, int longitud) {
         char columnaInicio = inicio.getColumna();
         int filaInicio = inicio.getFila();
-
+        
         switch (direccion) {
-            case 'Q': // Noroeste (arriba-izquierda)
+            case 'Q': // Noroeste
                 return new Punto((char)(columnaInicio - longitud), filaInicio - longitud);
-            case 'E': // Noreste (arriba-derecha)
+            case 'E': // Noreste
                 return new Punto((char)(columnaInicio + longitud), filaInicio - longitud);
-            case 'D': // Este (derecha)
+            case 'D': // Este
                 return new Punto((char)(columnaInicio + longitud), filaInicio);
-            case 'C': // Sureste (abajo-derecha)
+            case 'C': // Sureste
                 return new Punto((char)(columnaInicio + longitud), filaInicio + longitud);
-            case 'Z': // Suroeste (abajo-izquierda)
+            case 'Z': // Suroeste
                 return new Punto((char)(columnaInicio - longitud), filaInicio + longitud);
-            case 'A': // Oeste (izquierda)
+            case 'A': // Oeste
                 return new Punto((char)(columnaInicio - longitud), filaInicio);
             default:
                 return null;
@@ -273,44 +220,16 @@ public class Partida {
     }
     
     private void mostrarTableros() {
-        int cantidadAMostrar = config.getCantidadTableros();
-
-        if (cantidadAMostrar <= 1) {
+        if (config.getCantidadTableros() <= 1) {
             // Mostrar solo el tablero actual
             tablero.mostrar();
         } else {
-            System.out.println("\n--- VISUALIZACIÓN DE " + cantidadAMostrar + " TABLEROS ---");
-
-            // Preparar la lista de tableros a mostrar
-            List<Tablero> tablerosAMostrar = new ArrayList<>();
-
-            // Añadir los tableros históricos más recientes primero (irán a la izquierda)
-            if (!historialTableros.isEmpty()) {
-                int inicio = Math.max(0, historialTableros.size() - (cantidadAMostrar - 1));
-                for (int i = inicio; i < historialTableros.size(); i++) {
-                    tablerosAMostrar.add(historialTableros.get(i));
+            // Mostrar varios tableros
+            for (int i = 0; i < historialTableros.size(); i++) {
+                if (i > 0) {
+                    System.out.print("   ");
                 }
-            }
-
-            // Añadir el tablero actual al final (irá a la derecha)
-            tablerosAMostrar.add(tablero);
-
-            // Imprimir encabezado común para todos los tableros
-            for (int t = 0; t < tablerosAMostrar.size(); t++) {
-                System.out.print("  ");
-                for (char c = 'A'; c <= 'M'; c++) {
-                    System.out.print(c + " ");
-                }
-                if (t < tablerosAMostrar.size() - 1) {
-                    System.out.print("    "); // Espacio entre tableros
-                }
-            }
-            System.out.println("\n");
-
-            // Mostrar los tableros uno al lado del otro (aproximación)
-            for (Tablero t : tablerosAMostrar) {
-                System.out.print("   ");
-                t.mostrar(true); // Usar el método existente con un solo parámetro
+                historialTableros.get(i).mostrar(true); // Mostrar en modo compacto
             }
         }
     }
@@ -329,7 +248,6 @@ public class Partida {
         }
     }
     
-    // Método optimizado para mostrar dos fuegos artificiales en una línea
     private void mostrarAnimacionVictoria() {
         System.out.println("\n¡VICTORIA PARA " + (ganador == jugadorBlanco ? "BLANCO" : "NEGRO") + "!");
 
@@ -392,3 +310,4 @@ public class Partida {
         return ganador;
     }
 }
+

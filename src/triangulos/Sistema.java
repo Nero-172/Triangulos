@@ -68,7 +68,7 @@ public class Sistema {
         
         // Verificar si el nombre ya existe
         for (Jugador j : jugadores) {
-            if (j.getNombre().equalsIgnoreCase(nombre)) {
+            if (j.getNombre().toLowerCase().equalsIgnoreCase(nombre.toLowerCase())) {
                 System.out.println("Error: Ya existe un jugador con ese nombre.");
                 return;
             }
@@ -105,8 +105,22 @@ public class Sistema {
         System.out.print("¿Requiere contacto para colocar bandas? (S/N): ");
         boolean requiereContacto = scanner.nextLine().toUpperCase().equals("S");
         
-        System.out.print("¿Largo de bandas variado (1-4)? (S/N): ");
-        boolean largoVariado = scanner.nextLine().toUpperCase().equals("S");
+        // Solicitar el largo de banda (1-4)
+        int largoBanda = 4; // Valor por defecto
+        System.out.print("Ingrese el largo de las bandas (1-4): ");
+        try {
+            String largoStr = scanner.nextLine();
+            if (!largoStr.isEmpty()) {
+                int largo = Integer.parseInt(largoStr);
+                if (largo >= 1 && largo <= 4) {
+                    largoBanda = largo;
+                } else {
+                    System.out.println("Largo inválido. Se usará el valor por defecto (4).");
+                }
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Entrada inválida. Se usará el valor por defecto (4).");
+        }
         
         System.out.print("Cantidad de bandas (por defecto 10): ");
         String cantBandasStr = scanner.nextLine();
@@ -121,8 +135,14 @@ public class Sistema {
             cantidadTableros = 1;
         }
         
-        config = new Configuracion(requiereContacto, largoVariado, cantidadBandas, cantidadTableros);
-        System.out.println("Configuración especial establecida.");
+        config = new Configuracion(requiereContacto, largoBanda, cantidadBandas, cantidadTableros);
+        
+        // Mostrar confirmación de la configuración
+        System.out.println("\nConfiguración establecida:");
+        System.out.println("- Requiere contacto: " + (requiereContacto ? "Sí" : "No"));
+        System.out.println("- Largo de bandas: " + largoBanda);
+        System.out.println("- Cantidad de bandas: " + cantidadBandas);
+        System.out.println("- Cantidad de tableros: " + cantidadTableros);
     }
     
     private void comenzarPartida() {
@@ -226,7 +246,12 @@ public class Sistema {
         if (maxRacha == 0) {
             System.out.println("Ningún jugador tiene racha ganadora.");
         } else {
-            System.out.println("Racha máxima: " + maxRacha + " partidas consecutivas");
+            if(maxRacha == 1){
+                System.out.println("Racha máxima: " + maxRacha + " partida consecutiva");
+            }
+            else{
+                System.out.println("Racha máxima: " + maxRacha + " partidas consecutivas");
+            }
             System.out.println("Jugador(es) con la racha máxima:");
             for (Jugador j : jugadoresMaxRacha) {
                 System.out.println("- " + j.getNombre());

@@ -177,7 +177,7 @@ public class Tablero {
         mostrar(false, true);
     }
     
-    // Método mostrar corregido para visualizar correctamente las bandas diagonales
+    // Método mostrar corregido para visualizar correctamente las bandas
     public void mostrar(boolean compacto, boolean mostrarEncabezado) {
         // Crear una matriz para representar el tablero con espacio para las bandas
         int filaVisualMax = FILAS * 2 - 1;
@@ -191,7 +191,103 @@ public class Tablero {
             }
         }
 
-        // [El resto del código de mostrar() se mantiene igual hasta llegar a la parte de imprimir]
+        // Colocar asteriscos en los puntos válidos del tablero
+        for (int fila = 1; fila <= FILAS; fila++) {
+            int desplazamiento = Math.abs(4 - fila);
+            char colMin = (char)('A' + desplazamiento);
+            char colMax = (char)('M' - desplazamiento);
+
+            for (char col = colMin; col <= colMax; col += 2) {
+                Punto punto = new Punto(col, fila);
+
+                // Calcular posición en la matriz visual
+                int filaVisual = (fila - 1) * 2;
+                int colVisual = (col - 'A') * 2;
+
+                // Verificar si el punto es el centro de algún triángulo
+                boolean esCentroTriangulo = false;
+                boolean esCentroBlanco = false;
+
+                for (Triangulo t : triangulos) {
+                    if (t.getCentro() != null && t.getCentro().equals(punto)) {
+                        esCentroTriangulo = true;
+                        esCentroBlanco = t.esBlanco();
+                        break;
+                    }
+                }
+
+                if (esCentroTriangulo) {
+                    tableroVisual[filaVisual][colVisual] = '□';
+                } else {
+                    tableroVisual[filaVisual][colVisual] = '*';
+                }
+            }
+        }
+
+        // Colocar bandas en el tablero
+        for (Banda banda : bandas) {
+            Punto inicio = banda.getInicio();
+            Punto fin = banda.getFin();
+
+            // Calcular posiciones en la matriz visual
+            int filaInicioVisual = (inicio.getFila() - 1) * 2;
+            int colInicioVisual = (inicio.getColumna() - 'A') * 2;
+            int filaFinVisual = (fin.getFila() - 1) * 2;
+            int colFinVisual = (fin.getColumna() - 'A') * 2;
+
+            // Determinar la dirección de la banda
+            int deltaFila = fin.getFila() - inicio.getFila();
+            int deltaCol = fin.getColumna() - inicio.getColumna();
+
+            // Dibujar la banda según su dirección
+            if (deltaFila == 0) {
+                // Banda horizontal (Este-Oeste)
+                int filaVisual = filaInicioVisual;
+                int colMin = Math.min(colInicioVisual, colFinVisual);
+                int colMax = Math.max(colInicioVisual, colFinVisual);
+
+                for (int col = colMin + 1; col < colMax; col++) {
+                    if (tableroVisual[filaVisual][col] == ' ') {
+                        tableroVisual[filaVisual][col] = '-';
+                    }
+                }
+            } else if (deltaCol == 0) {
+                // Banda vertical (Norte-Sur)
+                int colVisual = colInicioVisual;
+                int filaMin = Math.min(filaInicioVisual, filaFinVisual);
+                int filaMax = Math.max(filaInicioVisual, filaFinVisual);
+
+                for (int fila = filaMin + 1; fila < filaMax; fila++) {
+                    tableroVisual[fila][colVisual] = '|';
+                }
+            } else {
+                // Determinar si es una diagonal Noroeste-Sureste o Noreste-Suroeste
+                boolean esDiagonalNOSE = (deltaCol * deltaFila > 0); // Noroeste-Sureste
+
+                // Calcular los pasos para recorrer la diagonal
+                int pasoFila = (deltaFila > 0) ? 1 : -1;
+                int pasoCol = (deltaCol > 0) ? 1 : -1;
+
+                // Dibujar la diagonal
+                int filaActual = filaInicioVisual;
+                int colActual = colInicioVisual;
+
+                while (filaActual != filaFinVisual || colActual != colFinVisual) {
+                    // Avanzar en la dirección diagonal
+                    if (filaActual != filaFinVisual) filaActual += pasoFila;
+                    if (colActual != colFinVisual) colActual += pasoCol;
+
+                    // Si estamos en un punto intermedio (no en un asterisco), dibujar la banda
+                    if (filaActual % 2 != 0 || colActual % 2 != 0) {
+                        if (filaActual >= 0 && filaActual < tableroVisual.length && 
+                            colActual >= 0 && colActual < tableroVisual[0].length) {
+                            // Usar el carácter adecuado según la dirección
+                            tableroVisual[filaActual][colActual] = esDiagonalNOSE ? '\\' : '/';
+                        }
+                    }
+                }
+            }
+        }
 
         // Dibujar el tablero
         if (mostrarEncabezado) {
@@ -209,16 +305,23 @@ public class Tablero {
             System.out.println();
         }
 
-        // Imprimir el tablero
+        // Imprimir el tablero con modificación para bandas horizontales
+        StringBuilder linea = new StringBuilder();
         for (int i = 0; i < filaVisualMax; i++) {
-            System.out.print(" ");  // ← No muestra números de fila
+            linea.setLength(0);
+            linea.append(" ");  // ← No muestra números de fila
 
             // Imprimir contenido de la fila
             for (int j = 0; j < colVisualMax; j++) {
-                System.out.print(tableroVisual[i][j]);
+                char c = tableroVisual[i][j];
+                if (c == '-') {
+                    linea.append("---");
+                } else {
+                    linea.append(c);
+                }
             }
 
-            System.out.println();
+            System.out.println(linea.toString());
 
             // Si estamos en modo compacto, omitir las filas intermedias
             if (compacto && i % 2 == 0 && i < filaVisualMax - 1) {

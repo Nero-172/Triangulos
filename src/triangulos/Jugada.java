@@ -33,12 +33,12 @@ public class Jugada {
     public String toString() {
         String dirStr = "";
         switch (direccion) {
-            case 'Q': dirStr = "noroeste (arriba-izquierda)"; break;
-            case 'E': dirStr = "noreste (arriba-derecha)"; break;
-            case 'D': dirStr = "este (derecha)"; break;
-            case 'C': dirStr = "sureste (abajo-derecha)"; break;
-            case 'Z': dirStr = "suroeste (abajo-izquierda)"; break;
-            case 'A': dirStr = "oeste (izquierda)"; break;
+            case 'Q': dirStr = "noroeste"; break;
+            case 'E': dirStr = "noreste"; break;
+            case 'D': dirStr = "este"; break;
+            case 'C': dirStr = "sureste"; break;
+            case 'Z': dirStr = "suroeste"; break;
+            case 'A': dirStr = "oeste"; break;
         }
         
         return inicio.toString() + " -> " + dirStr + " (longitud " + longitud + ")";

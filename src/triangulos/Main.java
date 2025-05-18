@@ -9,7 +9,8 @@ public class Main {
         // Configurar la salida para mostrar caracteres UTF-8
         System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
         
-        // Iniciar el sistema
+        // Iniciar el sistemaa
+        
         Sistema sistema = new Sistema();
         sistema.iniciar();
     }
