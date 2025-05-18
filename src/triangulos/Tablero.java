@@ -38,6 +38,7 @@ public class Tablero {
         return verificarTriangulos(esBlanco);
     }
     
+    // Método calcularPuntoFinal (correcto)
     private Punto calcularPuntoFinal(Punto inicio, char direccion, int longitud) {
         char columnaInicio = inicio.getColumna();
         int filaInicio = inicio.getFila();
@@ -84,8 +85,7 @@ public class Tablero {
                                               posibleTriangulo.getPunto1() + ", " + 
                                               posibleTriangulo.getPunto2() + ", " + 
                                               posibleTriangulo.getPunto3() + 
-                                              ", Centro: " + posibleTriangulo.getCentro() +
-                                              ", Jugador: " + (esBlanco ? "Blanco" : "Negro"));
+                                              ", Centro: " + posibleTriangulo.getCentro());
                         }
                     }
                 }
@@ -181,6 +181,7 @@ public class Tablero {
         mostrar(false);
     }
     
+    // Método mostrar corregido para visualizar correctamente las bandas diagonales
     public void mostrar(boolean compacto) {
         // Crear una matriz para representar el tablero con espacio para las bandas
         int filaVisualMax = FILAS * 2 - 1;
@@ -199,18 +200,19 @@ public class Tablero {
             int desplazamiento = Math.abs(4 - fila);
             char colMin = (char)('A' + desplazamiento);
             char colMax = (char)('M' - desplazamiento);
-            
-            for (char col = colMin; col <= colMax; col++) {
+
+            // Salta uno y coloca uno
+            for (char col = colMin; col <= colMax; col += 2) {
                 Punto punto = new Punto(col, fila);
-                
+
                 // Calcular posición en la matriz visual
                 int filaVisual = (fila - 1) * 2;
                 int colVisual = (col - 'A') * 2;
-                
+
                 // Verificar si el punto es el centro de algún triángulo
                 boolean esCentroTriangulo = false;
                 boolean esCentroBlanco = false;
-                
+
                 for (Triangulo t : triangulos) {
                     if (t.getCentro() != null && t.getCentro().equals(punto)) {
                         esCentroTriangulo = true;
@@ -218,9 +220,8 @@ public class Tablero {
                         break;
                     }
                 }
-                
+
                 if (esCentroTriangulo) {
-                    // Usar □ para triángulos blancos y ■ para triángulos negros
                     tableroVisual[filaVisual][colVisual] = esCentroBlanco ? '□' : '■';
                 } else {
                     tableroVisual[filaVisual][colVisual] = '*';
@@ -251,8 +252,10 @@ public class Tablero {
                 int colMax = Math.max(colInicioVisual, colFinVisual);
                 
                 for (int col = colMin + 1; col < colMax; col++) {
+                if (tableroVisual[filaVisual][col] == ' ') {
                     tableroVisual[filaVisual][col] = '-';
                 }
+            }
             } else if (deltaCol == 0) {
                 // Banda vertical (Norte-Sur)
                 int colVisual = colInicioVisual;
@@ -301,22 +304,22 @@ public class Tablero {
         }
         System.out.println();
         
+        // Agregar dos líneas de separación entre el encabezado y el tablero
+        System.out.println();
+        System.out.println();
+        
+        // Imprimir el tablero
         // Imprimir el tablero
         for (int i = 0; i < filaVisualMax; i++) {
-            // Imprimir número de fila solo en las filas que corresponden a puntos
-            if (i % 2 == 0) {
-                System.out.print((i / 2 + 1));
-            } else {
-                System.out.print(" ");
-            }
-            
+            System.out.print(" ");  // ← No muestra números de fila
+
             // Imprimir contenido de la fila
             for (int j = 0; j < colVisualMax; j++) {
                 System.out.print(tableroVisual[i][j]);
             }
-            
+
             System.out.println();
-            
+
             // Si estamos en modo compacto, omitir las filas intermedias
             if (compacto && i % 2 == 0 && i < filaVisualMax - 1) {
                 i++;
@@ -328,3 +331,4 @@ public class Tablero {
         }
     }
 }
+

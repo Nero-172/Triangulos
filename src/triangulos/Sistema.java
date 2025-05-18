@@ -51,7 +51,7 @@ public class Sistema {
     
     private void mostrarMenu() {
         System.out.println("\n=================================================");
-        System.out.println("Trabajo desarrollado por: Lorenzo Aldao () Jhonatan Adalid (320368)");
+        System.out.println("Trabajo desarrollado por: Lorenzo Aldao (307239) - Jhonatan Adalid (320368)");
         System.out.println("=================================================");
         System.out.println("a) Registrar un jugador");
         System.out.println("b) Configurar la partida");
