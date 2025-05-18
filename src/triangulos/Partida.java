@@ -345,7 +345,7 @@ public class Partida {
         try {
             // Mostrar la animación varias veces
             for (int animacion = 0; animacion < 1; animacion++) {
-
+                TimeUnit.MILLISECONDS.sleep(200);
                 // Primer patrón - forma de rombo/estrella con estrellas (más a la derecha)
                 System.out.println("          " + GREEN + "*" + RESET + "     " + 
                                    PURPLE + "*" + RESET + "     " + 
@@ -359,7 +359,7 @@ public class Partida {
                 System.out.println("          " + PURPLE + "*" + RESET + "     " + 
                                    YELLOW + "*" + RESET + "     " + 
                                    PURPLE + "*" + RESET);
-
+                TimeUnit.MILLISECONDS.sleep(800);
                 System.out.println(); // Espacio entre patrones
 
                 // Segundo patrón - forma de rombo/estrella con círculos
