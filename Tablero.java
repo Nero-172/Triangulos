@@ -305,30 +305,7 @@ public class Tablero {
             System.out.println();
         }
 
-        // Imprimir el tablero con modificación para bandas horizontales
-        StringBuilder linea = new StringBuilder();
-        for (int i = 0; i < filaVisualMax; i++) {
-            linea.setLength(0);
-            linea.append(" ");  // ← No muestra números de fila
-
-            // Imprimir contenido de la fila
-            for (int j = 0; j < colVisualMax; j++) {
-                char c = tableroVisual[i][j];
-                if (c == '-') {
-                    linea.append("---");
-                } else {
-                    linea.append(c);
-                }
-            }
-
-            System.out.println(linea.toString());
-
-            // Si estamos en modo compacto, omitir las filas intermedias
-            if (compacto && i % 2 == 0 && i < filaVisualMax - 1) {
-                i++;
-            }
-        }
-
+        
         if (!compacto){
             System.out.println();
         }
