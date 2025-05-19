@@ -96,22 +96,28 @@ public class Tablero {
     
     // Verifica si dos puntos están conectados por segmentos adyacentes de una banda
     private boolean estanConectados(Punto p1, Punto p2) {
+        boolean conectados = false;
+        
         for (Banda banda : bandas) {
+            if (conectados) {
+                break; // Si ya encontramos una conexión, no seguir buscando
+            }
+            
             List<Punto> puntos = banda.getPuntos();
             
-            for (int i = 0; i < puntos.size() - 1; i++) {
+            for (int i = 0; i < puntos.size() - 1 && !conectados; i++) {
                 Punto inicio = puntos.get(i);
                 Punto fin = puntos.get(i + 1);
                 
                 // Si estos dos puntos forman un segmento de la banda
                 if ((inicio.equals(p1) && fin.equals(p2)) || 
                     (inicio.equals(p2) && fin.equals(p1))) {
-                    return true;
+                    conectados = true;
                 }
             }
         }
         
-        return false;
+        return conectados;
     }
     
     // Método para generar todos los puntos válidos del tablero (patrón hexagonal)

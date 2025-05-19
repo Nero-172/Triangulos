@@ -239,7 +239,7 @@ public class Partida {
         
         // Debug output
         System.out.println("Generando puntos desde " + inicio + " en dirección " + direccion + " con longitud " + longitud);
-        System.out.println("Incrementos: fila=" + incFila + ", columna=" + incCol);
+        System.out.println("Incrementos: fila " + incFila + ", columna " + incCol);
         
         for (int i = 1; i < longitud + 1; i++) {
             col = (char)(col + incCol);
@@ -364,6 +364,7 @@ public class Partida {
         System.out.println(historial);
     }
     
+    // Esto fue generado con ChatGPT y ligeramente modificado.
     private void mostrarAnimacionVictoria() {
         System.out.println("\n¡VICTORIA PARA " + (ganador == jugadorBlanco ? "BLANCO" : "NEGRO") + "!");
 
