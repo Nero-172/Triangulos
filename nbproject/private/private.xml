@@ -5,7 +5,6 @@
         <group>
             <file>file:/C:/Users/USUARIO/Documents/NetBeansProjects/Triangulos/src/triangulos/Banda.java</file>
             <file>file:/C:/Users/USUARIO/Documents/NetBeansProjects/Triangulos/src/triangulos/Triangulo.java</file>
-            <file>file:/C:/Users/USUARIO/Documents/NetBeansProjects/Triangulos/Tablero.java</file>
             <file>file:/C:/Users/USUARIO/Documents/NetBeansProjects/Triangulos/src/triangulos/Main.java</file>
             <file>file:/C:/Users/USUARIO/Documents/NetBeansProjects/Triangulos/src/triangulos/Configuracion.java</file>
             <file>file:/C:/Users/USUARIO/Documents/NetBeansProjects/Triangulos/src/triangulos/Jugada.java</file>
@@ -13,6 +12,7 @@
             <file>file:/C:/Users/USUARIO/Documents/NetBeansProjects/Triangulos/src/triangulos/Punto.java</file>
             <file>file:/C:/Users/USUARIO/Documents/NetBeansProjects/Triangulos/src/triangulos/Sistema.java</file>
             <file>file:/C:/Users/USUARIO/Documents/NetBeansProjects/Triangulos/src/triangulos/Partida.java</file>
+            <file>file:/C:/Users/USUARIO/Documents/NetBeansProjects/Triangulos/src/triangulos/Tablero.java</file>
         </group>
     </open-files>
 </project-private>

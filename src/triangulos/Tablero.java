@@ -5,7 +5,9 @@ package triangulos;
  * @author Tu Número
  */
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Tablero {
     private static final int FILAS = 7;
@@ -64,28 +66,47 @@ public class Tablero {
     private int verificarTriangulos(boolean esBlanco) {
         int nuevosTriangulos = 0;
         
-        // Verificar todas las combinaciones posibles de 3 bandas
-        for (int i = 0; i < bandas.size(); i++) {
-            for (int j = i + 1; j < bandas.size(); j++) {
-                for (int k = j + 1; k < bandas.size(); k++) {
-                    Banda b1 = bandas.get(i);
-                    Banda b2 = bandas.get(j);
-                    Banda b3 = bandas.get(k);
+        // Si hay menos de 3 bandas, no puede haber triángulos
+        if (bandas.size() < 3) {
+            return 0;
+        }
+        
+        // Generar todos los puntos válidos del tablero
+        Set<Punto> puntosValidos = generarPuntosTablero();
+        
+        // Identificar los puntos por los que pasan bandas
+        List<Punto> puntosConBandas = new ArrayList<>();
+        for (Punto p : puntosValidos) {
+            for (Banda b : bandas) {
+                if (b.pasaPorPunto(p)) {
+                    puntosConBandas.add(p);
+                    break;
+                }
+            }
+        }
+        
+        // Verificar todas las combinaciones posibles de 3 puntos
+        for (int i = 0; i < puntosConBandas.size(); i++) {
+            for (int j = i + 1; j < puntosConBandas.size(); j++) {
+                for (int k = j + 1; k < puntosConBandas.size(); k++) {
+                    Punto p1 = puntosConBandas.get(i);
+                    Punto p2 = puntosConBandas.get(j);
+                    Punto p3 = puntosConBandas.get(k);
                     
-                    Triangulo posibleTriangulo = formanTriangulo(b1, b2, b3);
-                    
-                    if (posibleTriangulo != null) {
-                        if (!trianguloYaExiste(posibleTriangulo)) {
-                            posibleTriangulo.setEsBlanco(esBlanco);
-                            triangulos.add(posibleTriangulo);
+                    // Verificar si estos tres puntos forman un triángulo
+                    if (formanCircuitoCerrado(p1, p2, p3)) {
+                        Triangulo nuevoTriangulo = new Triangulo(p1, p2, p3);
+                        
+                        // Verificar si el triángulo ya existe
+                        if (!trianguloYaExiste(nuevoTriangulo)) {
+                            nuevoTriangulo.setEsBlanco(esBlanco);
+                            triangulos.add(nuevoTriangulo);
                             nuevosTriangulos++;
                             
                             // Imprimir información sobre el triángulo formado
                             System.out.println("¡Se ha formado un triángulo! Puntos: " + 
-                                              posibleTriangulo.getPunto1() + ", " + 
-                                              posibleTriangulo.getPunto2() + ", " + 
-                                              posibleTriangulo.getPunto3() + 
-                                              ", Centro: " + posibleTriangulo.getCentro());
+                                              p1 + ", " + p2 + ", " + p3 + 
+                                              ", Centro: " + nuevoTriangulo.getCentro());
                         }
                     }
                 }
@@ -95,50 +116,100 @@ public class Tablero {
         return nuevosTriangulos;
     }
     
-    private Triangulo formanTriangulo(Banda b1, Banda b2, Banda b3) {
-        // Verificar si las tres bandas forman un triángulo
-        // Esto implica que cada banda debe conectar con las otras dos en sus extremos
+    // Verifica si tres puntos forman un circuito cerrado (están conectados por bandas)
+    private boolean formanCircuitoCerrado(Punto p1, Punto p2, Punto p3) {
+        // Verificar si hay bandas que conectan cada par de puntos
+        boolean hayBandaP1P2 = estanConectados(p1, p2);
+        boolean hayBandaP1P3 = estanConectados(p1, p3);
+        boolean hayBandaP2P3 = estanConectados(p2, p3);
         
-        List<Punto> puntos = new ArrayList<>();
-        puntos.add(b1.getInicio());
-        puntos.add(b1.getFin());
-        puntos.add(b2.getInicio());
-        puntos.add(b2.getFin());
-        puntos.add(b3.getInicio());
-        puntos.add(b3.getFin());
+        // Para formar un circuito cerrado, necesitamos que los tres pares estén conectados
+        return hayBandaP1P2 && hayBandaP1P3 && hayBandaP2P3;
+    }
+    
+    // Verifica si dos puntos están conectados (directamente o a través de un punto intermedio)
+    private boolean estanConectados(Punto p1, Punto p2) {
+        // Verificar si hay una banda directa entre los puntos
+        for (Banda b : bandas) {
+            if (b.pasaPorPunto(p1) && b.pasaPorPunto(p2)) {
+                return true;
+            }
+        }
         
-        // Contar cuántas veces aparece cada punto
-        List<Punto> puntosUnicos = new ArrayList<>();
-        List<Integer> contadores = new ArrayList<>();
-        
-        for (Punto p : puntos) {
-            boolean encontrado = false;
-            for (int i = 0; i < puntosUnicos.size(); i++) {
-                if (p.equals(puntosUnicos.get(i))) {
-                    contadores.set(i, contadores.get(i) + 1);
-                    encontrado = true;
-                    break;
+        // Verificar si están en la misma fila y hay un punto intermedio
+        if (p1.getFila() == p2.getFila()) {
+            char colMin = (char) Math.min(p1.getColumna(), p2.getColumna());
+            char colMax = (char) Math.max(p1.getColumna(), p2.getColumna());
+            
+            // Si hay exactamente 2 columnas de diferencia (un punto intermedio)
+            if (colMax - colMin == 2) {
+                char colIntermedia = (char) (colMin + 1);
+                Punto puntoIntermedio = new Punto(colIntermedia, p1.getFila());
+                
+                // Verificar si hay bandas que pasan por el punto intermedio
+                for (Banda b : bandas) {
+                    if (b.pasaPorPunto(puntoIntermedio)) {
+                        return true;
+                    }
                 }
             }
-            if (!encontrado) {
-                puntosUnicos.add(p);
-                contadores.add(1);
+        }
+        
+        // Verificar si están en la misma columna y hay un punto intermedio
+        if (p1.getColumna() == p2.getColumna()) {
+            int filaMin = Math.min(p1.getFila(), p2.getFila());
+            int filaMax = Math.max(p1.getFila(), p2.getFila());
+            
+            // Si hay exactamente 2 filas de diferencia (un punto intermedio)
+            if (filaMax - filaMin == 2) {
+                int filaIntermedia = filaMin + 1;
+                Punto puntoIntermedio = new Punto(p1.getColumna(), filaIntermedia);
+                
+                // Verificar si hay bandas que pasan por el punto intermedio
+                for (Banda b : bandas) {
+                    if (b.pasaPorPunto(puntoIntermedio)) {
+                        return true;
+                    }
+                }
             }
         }
         
-        // Verificar si hay exactamente 3 puntos que aparecen exactamente 2 veces cada uno
-        List<Punto> verticesTriangulo = new ArrayList<>();
-        for (int i = 0; i < puntosUnicos.size(); i++) {
-            if (contadores.get(i) == 2) {
-                verticesTriangulo.add(puntosUnicos.get(i));
+        // Verificar si están en la misma diagonal y hay un punto intermedio
+        int deltaFila = p2.getFila() - p1.getFila();
+        int deltaCol = p2.getColumna() - p1.getColumna();
+        
+        // Si la pendiente es 1 o -1 (diagonal) y hay exactamente 2 unidades de diferencia
+        if (Math.abs(deltaFila) == Math.abs(deltaCol) && Math.abs(deltaFila) == 2) {
+            int filaIntermedia = (p1.getFila() + p2.getFila()) / 2;
+            char colIntermedia = (char) ((p1.getColumna() + p2.getColumna()) / 2);
+            Punto puntoIntermedio = new Punto(colIntermedia, filaIntermedia);
+            
+            // Verificar si hay bandas que pasan por el punto intermedio
+            for (Banda b : bandas) {
+                if (b.pasaPorPunto(puntoIntermedio)) {
+                    return true;
+                }
             }
         }
         
-        if (verticesTriangulo.size() == 3) {
-            return new Triangulo(verticesTriangulo.get(0), verticesTriangulo.get(1), verticesTriangulo.get(2));
+        return false;
+    }
+    
+    // Método para generar todos los puntos válidos del tablero (patrón hexagonal)
+    private Set<Punto> generarPuntosTablero() {
+        Set<Punto> puntos = new HashSet<>();
+        
+        for (int fila = 1; fila <= FILAS; fila++) {
+            int desplazamiento = Math.abs(4 - fila);
+            char colMin = (char)('A' + desplazamiento);
+            char colMax = (char)('M' - desplazamiento);
+            
+            for (char col = colMin; col <= colMax; col += 2) {
+                puntos.add(new Punto(col, fila));
+            }
         }
         
-        return null;
+        return puntos;
     }
     
     private boolean trianguloYaExiste(Triangulo triangulo) {
@@ -174,7 +245,14 @@ public class Tablero {
         char colMin = (char)('A' + desplazamiento);
         char colMax = (char)('M' - desplazamiento);
         
-        return columna >= colMin && columna <= colMax;
+        // Verificar si la columna está en el patrón (salta de 2 en 2)
+        if (columna < colMin || columna > colMax) {
+            return false;
+        }
+        
+        // En el patrón hexagonal, las columnas válidas son A, C, E, G, I, K, M en la fila 4
+        // y se desplazan según la fila
+        return (columna - colMin) % 2 == 0;
     }
     
     public void mostrar() {
@@ -222,7 +300,7 @@ public class Tablero {
                 }
 
                 if (esCentroTriangulo) {
-                    tableroVisual[filaVisual][colVisual] = esCentroBlanco ? '□' : '■';
+                    tableroVisual[filaVisual][colVisual] = '□';
                 } else {
                     tableroVisual[filaVisual][colVisual] = '*';
                 }
@@ -251,11 +329,15 @@ public class Tablero {
                 int colMin = Math.min(colInicioVisual, colFinVisual);
                 int colMax = Math.max(colInicioVisual, colFinVisual);
                 
-                for (int col = colMin + 1; col < colMax; col++) {
-                if (tableroVisual[filaVisual][col] == ' ') {
-                    tableroVisual[filaVisual][col] = '-';
-                }
-            }
+                 for (int col = colInicioVisual + 1; col < colFinVisual; col += 4) {
+                        if (col + 2 < colVisualMax) {
+                            tableroVisual[filaInicioVisual][col] = '-';
+                            tableroVisual[filaInicioVisual][col + 1] = '-';
+                            tableroVisual[filaInicioVisual][col + 2] = '-';
+                        }
+                    }
+                
+                
             } else if (deltaCol == 0) {
                 // Banda vertical (Norte-Sur)
                 int colVisual = colInicioVisual;
@@ -280,7 +362,7 @@ public class Tablero {
                 while (filaActual != filaFinVisual || colActual != colFinVisual) {
                     // Avanzar en la dirección diagonal
                     if (filaActual != filaFinVisual) filaActual += pasoFila;
-                    if (colActual != colFinVisual) colActual += pasoCol;
+                    if (colActual != filaFinVisual) colActual += pasoCol;
                     
                     // Si estamos en un punto intermedio (no en un asterisco), dibujar la banda
                     if (filaActual % 2 != 0 || colActual % 2 != 0) {
@@ -330,5 +412,135 @@ public class Tablero {
             System.out.println();
         }
     }
+    
+    // Método para depurar la detección de triángulos (solo para pruebas)
+    public void depurarTriangulos() {
+        System.out.println("\n--- DEPURACIÓN DE TRIÁNGULOS ---");
+        
+        // Generar todos los puntos válidos del tablero
+        Set<Punto> puntosValidos = generarPuntosTablero();
+        
+        // Imprimir todas las bandas
+        System.out.println("Bandas actuales: " + bandas.size());
+        for (int i = 0; i < bandas.size(); i++) {
+            Banda b = bandas.get(i);
+            System.out.println("Banda " + (i+1) + ": " + b.getInicio() + " a " + b.getFin());
+        }
+        
+        // Imprimir todos los puntos válidos
+        System.out.println("\nPuntos válidos del tablero:");
+        for (Punto p : puntosValidos) {
+            System.out.print(p + " ");
+        }
+        System.out.println();
+        
+        // Verificar qué puntos están en cada banda
+        System.out.println("\nPuntos por los que pasan bandas:");
+        for (Punto p : puntosValidos) {
+            List<Integer> bandasQuePasan = new ArrayList<>();
+            for (int i = 0; i < bandas.size(); i++) {
+                if (bandas.get(i).pasaPorPunto(p)) {
+                    bandasQuePasan.add(i + 1);
+                }
+            }
+            if (!bandasQuePasan.isEmpty()) {
+                System.out.println("  " + p + ": Bandas " + bandasQuePasan);
+            }
+        }
+        
+        // Identificar los puntos por los que pasan bandas
+        List<Punto> puntosConBandas = new ArrayList<>();
+        for (Punto p : puntosValidos) {
+            boolean tieneBanda = false;
+            for (Banda b : bandas) {
+                if (b.pasaPorPunto(p)) {
+                    tieneBanda = true;
+                    break;
+                }
+            }
+            if (tieneBanda) {
+                puntosConBandas.add(p);
+            }
+        }
+        
+        System.out.println("\nPuntos con bandas:");
+        for (Punto p : puntosConBandas) {
+            System.out.print(p + " ");
+        }
+        System.out.println();
+        
+        // Verificar conexiones entre puntos
+        System.out.println("\nVerificando conexiones entre puntos:");
+        for (int i = 0; i < puntosConBandas.size(); i++) {
+            for (int j = i + 1; j < puntosConBandas.size(); j++) {
+                Punto p1 = puntosConBandas.get(i);
+                Punto p2 = puntosConBandas.get(j);
+                
+                boolean conectados = estanConectados(p1, p2);
+                System.out.println("  " + p1 + " - " + p2 + ": " + (conectados ? "Conectados" : "No conectados"));
+                
+                // Si están conectados, mostrar cómo están conectados
+                if (conectados) {
+                    // Verificar si hay una banda directa
+                    boolean bandaDirecta = false;
+                    for (Banda b : bandas) {
+                        if (b.pasaPorPunto(p1) && b.pasaPorPunto(p2)) {
+                            bandaDirecta = true;
+                            System.out.println("    Conectados directamente por una banda");
+                            break;
+                        }
+                    }
+                    
+                    if (!bandaDirecta) {
+                        // Verificar si están en la misma fila y hay un punto intermedio
+                        if (p1.getFila() == p2.getFila() && Math.abs(p1.getColumna() - p2.getColumna()) == 2) {
+                            char colIntermedia = (char) ((p1.getColumna() + p2.getColumna()) / 2);
+                            System.out.println("    Conectados a través del punto intermedio " + 
+                                              new Punto(colIntermedia, p1.getFila()));
+                        }
+                        // Verificar si están en la misma columna y hay un punto intermedio
+                        else if (p1.getColumna() == p2.getColumna() && Math.abs(p1.getFila() - p2.getFila()) == 2) {
+                            int filaIntermedia = (p1.getFila() + p2.getFila()) / 2;
+                            System.out.println("    Conectados a través del punto intermedio " + 
+                                              new Punto(p1.getColumna(), filaIntermedia));
+                        }
+                        // Verificar si están en la misma diagonal y hay un punto intermedio
+                        else if (Math.abs(p1.getFila() - p2.getFila()) == 2 && 
+                                Math.abs(p1.getColumna() - p2.getColumna()) == 2) {
+                            int filaIntermedia = (p1.getFila() + p2.getFila()) / 2;
+                            char colIntermedia = (char) ((p1.getColumna() + p2.getColumna()) / 2);
+                            System.out.println("    Conectados a través del punto intermedio " + 
+                                              new Punto(colIntermedia, filaIntermedia));
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Verificar todas las combinaciones posibles de 3 puntos
+        System.out.println("\nVerificando combinaciones de 3 puntos:");
+        for (int i = 0; i < puntosConBandas.size(); i++) {
+            for (int j = i + 1; j < puntosConBandas.size(); j++) {
+                for (int k = j + 1; k < puntosConBandas.size(); k++) {
+                    Punto p1 = puntosConBandas.get(i);
+                    Punto p2 = puntosConBandas.get(j);
+                    Punto p3 = puntosConBandas.get(k);
+                    
+                    // Verificar conexiones entre puntos
+                    boolean hayBandaP1P2 = estanConectados(p1, p2);
+                    boolean hayBandaP1P3 = estanConectados(p1, p3);
+                    boolean hayBandaP2P3 = estanConectados(p2, p3);
+                    
+                    System.out.println("Puntos: " + p1 + ", " + p2 + ", " + p3);
+                    System.out.println("  " + p1 + " - " + p2 + ": " + (hayBandaP1P2 ? "Conectados" : "No conectados"));
+                    System.out.println("  " + p1 + " - " + p3 + ": " + (hayBandaP1P3 ? "Conectados" : "No conectados"));
+                    System.out.println("  " + p2 + " - " + p3 + ": " + (hayBandaP2P3 ? "Conectados" : "No conectados"));
+                    
+                    boolean formanTriangulo = hayBandaP1P2 && hayBandaP1P3 && hayBandaP2P3;
+                    System.out.println("  ¿Forman triángulo? " + (formanTriangulo ? "SÍ" : "NO"));
+                    System.out.println();
+                }
+            }
+        }
+    }
 }
-
