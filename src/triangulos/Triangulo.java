@@ -86,11 +86,10 @@ public class Triangulo {
     private boolean esValidoEnTablero(Punto p) {
         int fila = p.getFila();
         char col = p.getColumna();
-        boolean noCumple = false;
         
         // Verificar límites básicos
         if (fila < 1 || fila > 7 || col < 'A' || col > 'M') {
-            return noCumple;
+            return false;
         }
         
         // Verificar si está dentro del patrón hexagonal
@@ -100,7 +99,7 @@ public class Triangulo {
         
         // Verificar si la columna está en el patrón (salta de 2 en 2)
         if (col < colMin || col > colMax) {
-            return noCumple;
+            return false;
         }
         
         // En el patrón hexagonal, las columnas válidas son A, C, E, G, I, K, M en la fila 4
