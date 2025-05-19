@@ -51,7 +51,7 @@ public class Partida {
             String jugadorActual = turnoBlanco ? "Blanco (" + jugadorBlanco.getNombre() + ")" : "Negro (" + jugadorNegro.getNombre() + ")";
             System.out.println("\nTurno del jugador " + jugadorActual);
             System.out.println("Triángulos - Blanco: " + triangulasBlanco + " | Negro: " + triangulosNegro);
-            System.out.print("Ingrese jugada (LetraFilaDirección, X para rendirse, H para historial): ");
+            System.out.print("Ingrese jugada (LetraFilaDirección, X para rendirse, H para historial, D para depurar): ");
             
             String entradaJugada = scanner.nextLine().toUpperCase();
             
@@ -64,6 +64,11 @@ public class Partida {
             
             if (entradaJugada.equals("H")) {
                 mostrarHistorial();
+                continue; // No cambia el turno
+            }
+            
+            if (entradaJugada.equals("D")) {
+                tablero.depurarTriangulos();
                 continue; // No cambia el turno
             }
             
@@ -277,7 +282,7 @@ public class Partida {
                 System.out.println("          " + PURPLE + "*" + RESET + "     " + 
                                    YELLOW + "*" + RESET + "     " + 
                                    PURPLE + "*" + RESET);
-
+                TimeUnit.MILLISECONDS.sleep(200);
                 System.out.println(); // Espacio entre patrones
 
                 // Segundo patrón - forma de rombo/estrella con círculos
@@ -310,4 +315,3 @@ public class Partida {
         return ganador;
     }
 }
-
