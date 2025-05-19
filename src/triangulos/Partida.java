@@ -282,7 +282,7 @@ public class Partida {
                 System.out.println("          " + PURPLE + "*" + RESET + "     " + 
                                    YELLOW + "*" + RESET + "     " + 
                                    PURPLE + "*" + RESET);
-                TimeUnit.MILLISECONDS.sleep(200);
+                TimeUnit.MILLISECONDS.sleep(400);
                 System.out.println(); // Espacio entre patrones
 
                 // Segundo patrón - forma de rombo/estrella con círculos
