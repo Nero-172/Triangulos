@@ -1,13 +1,22 @@
 package triangulos;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Banda {
     private Punto inicio;
     private Punto fin;
-    private boolean esBlanco; // true si fue colocada por el jugador blanco
+    private List<Punto> puntos;
+    private boolean esBlanco;
     
-    public Banda(Punto inicio, Punto fin, boolean esBlanco) {
-        this.inicio = inicio;
-        this.fin = fin;
+    // Constructor simplificado que recibe una lista de puntos
+    public Banda(List<Punto> puntos, boolean esBlanco) {
+        if (puntos == null || puntos.isEmpty()) {
+            throw new IllegalArgumentException("La lista de puntos no puede estar vacía");
+        }
+        this.puntos = new ArrayList<>(puntos);
+        this.inicio = puntos.get(0);
+        this.fin = puntos.get(puntos.size() - 1);
         this.esBlanco = esBlanco;
     }
     
@@ -19,59 +28,21 @@ public class Banda {
         return fin;
     }
     
+    public List<Punto> getPuntos() {
+        return puntos;
+    }
+    
     public boolean esBlanco() {
         return esBlanco;
     }
     
-    // Mejorar el método pasaPorPunto para detectar correctamente los puntos en las bandas diagonales
+    // Método para verificar si la banda pasa por un punto específico
     public boolean pasaPorPunto(Punto punto) {
-        // Verificar si el punto está en los extremos
-        if (inicio.equals(punto) || fin.equals(punto)) {
-            return true;
-        }
+        if (punto == null) return false;
         
-        // Obtener las diferencias
-        int deltaCol = fin.getColumna() - inicio.getColumna();
-        int deltaFila = fin.getFila() - inicio.getFila();
-        
-        // Para bandas horizontales (Este-Oeste)
-        if (deltaFila == 0) {
-            if (punto.getFila() == inicio.getFila()) {
-                char colMin = (char) Math.min(inicio.getColumna(), fin.getColumna());
-                char colMax = (char) Math.max(inicio.getColumna(), fin.getColumna());
-                return punto.getColumna() >= colMin && punto.getColumna() <= colMax;
-            }
-            return false;
-        }
-        
-        // Para bandas verticales (Norte-Sur)
-        if (deltaCol == 0) {
-            if (punto.getColumna() == inicio.getColumna()) {
-                int filaMin = Math.min(inicio.getFila(), fin.getFila());
-                int filaMax = Math.max(inicio.getFila(), fin.getFila());
-                return punto.getFila() >= filaMin && punto.getFila() <= filaMax;
-            }
-            return false;
-        }
-        
-        // Para bandas diagonales
-        // Si es una diagonal perfecta (45 grados)
-        if (Math.abs(deltaCol) == Math.abs(deltaFila)) {
-            // Determinar la dirección
-            int pasoFila = deltaFila > 0 ? 1 : -1;
-            int pasoCol = deltaCol > 0 ? 1 : -1;
-            
-            // Recorrer la diagonal desde el inicio
-            char col = inicio.getColumna();
-            int fila = inicio.getFila();
-            
-            while (col != fin.getColumna() || fila != fin.getFila()) {
-                if (col == punto.getColumna() && fila == punto.getFila()) {
-                    return true;
-                }
-                
-                col += pasoCol;
-                fila += pasoFila;
+        for (Punto p : puntos) {
+            if (p.equals(punto)) {
+                return true;
             }
         }
         
@@ -80,8 +51,13 @@ public class Banda {
     
     @Override
     public String toString() {
-        return "Banda de " + inicio + " a " + fin;
+        StringBuilder sb = new StringBuilder("Banda: ");
+        for (int i = 0; i < puntos.size(); i++) {
+            sb.append(puntos.get(i));
+            if (i < puntos.size() - 1) {
+                sb.append(" → ");
+            }
+        }
+        return sb.toString();
     }
 }
-
-

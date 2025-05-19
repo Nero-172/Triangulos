@@ -14,7 +14,7 @@ public class Sistema {
     
     public Sistema() {
         jugadores = new ArrayList<>();
-        config = new Configuracion(); // Configuración por defecto
+        config = new Configuracion(); 
         partidas = new ArrayList<>();
         scanner = new Scanner(System.in);
     }

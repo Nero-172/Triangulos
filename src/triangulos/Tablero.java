@@ -1,9 +1,5 @@
 package triangulos;
-/**
- * Clase que representa el tablero de juego
- * @author Tu Nombre
- * @author Tu Número
- */
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,42 +23,19 @@ public class Tablero {
         this.triangulos = new ArrayList<>(otro.triangulos);
     }
     
-    public List<Banda> getBandas() {
-        return bandas;
-    }
-    
-    public int colocarBanda(Punto inicio, char direccion, int longitud, boolean esBlanco) {
-        Punto fin = calcularPuntoFinal(inicio, direccion, longitud);
-        Banda nuevaBanda = new Banda(inicio, fin, esBlanco);
+    // Método simplificado para colocar una banda 
+    public int colocarBanda(List<Punto> puntos, boolean esBlanco) {
+        // Crear la banda
+        Banda nuevaBanda = new Banda(puntos, esBlanco);
         bandas.add(nuevaBanda);
+        
+        System.out.println("Banda colocada: " + nuevaBanda);
         
         // Verificar si se formaron nuevos triángulos
         return verificarTriangulos(esBlanco);
     }
     
-    // Método calcularPuntoFinal (correcto)
-    private Punto calcularPuntoFinal(Punto inicio, char direccion, int longitud) {
-        char columnaInicio = inicio.getColumna();
-        int filaInicio = inicio.getFila();
-        
-        switch (direccion) {
-            case 'Q': // Noroeste (arriba-izquierda)
-                return new Punto((char)(columnaInicio - longitud), filaInicio - longitud);
-            case 'E': // Noreste (arriba-derecha)
-                return new Punto((char)(columnaInicio + longitud), filaInicio - longitud);
-            case 'D': // Este (derecha)
-                return new Punto((char)(columnaInicio + longitud), filaInicio);
-            case 'C': // Sureste (abajo-derecha)
-                return new Punto((char)(columnaInicio + longitud), filaInicio + longitud);
-            case 'Z': // Suroeste (abajo-izquierda)
-                return new Punto((char)(columnaInicio - longitud), filaInicio + longitud);
-            case 'A': // Oeste (izquierda)
-                return new Punto((char)(columnaInicio - longitud), filaInicio);
-            default:
-                return null;
-        }
-    }
-    
+    // Método para verificar triángulos
     private int verificarTriangulos(boolean esBlanco) {
         int nuevosTriangulos = 0;
         
@@ -94,7 +67,7 @@ public class Tablero {
                     Punto p3 = puntosConBandas.get(k);
                     
                     // Verificar si estos tres puntos forman un triángulo
-                    if (formanCircuitoCerrado(p1, p2, p3)) {
+                    if (formanTriangulo(p1, p2, p3)) {
                         Triangulo nuevoTriangulo = new Triangulo(p1, p2, p3);
                         
                         // Verificar si el triángulo ya existe
@@ -116,77 +89,23 @@ public class Tablero {
         return nuevosTriangulos;
     }
     
-    // Verifica si tres puntos forman un circuito cerrado (están conectados por bandas)
-    private boolean formanCircuitoCerrado(Punto p1, Punto p2, Punto p3) {
-        // Verificar si hay bandas que conectan cada par de puntos
-        boolean hayBandaP1P2 = estanConectados(p1, p2);
-        boolean hayBandaP1P3 = estanConectados(p1, p3);
-        boolean hayBandaP2P3 = estanConectados(p2, p3);
-        
-        // Para formar un circuito cerrado, necesitamos que los tres pares estén conectados
-        return hayBandaP1P2 && hayBandaP1P3 && hayBandaP2P3;
+    // Método para verificar si tres puntos forman un triángulo
+    private boolean formanTriangulo(Punto p1, Punto p2, Punto p3) {
+        return estanConectados(p1, p2) && estanConectados(p1, p3) && estanConectados(p2, p3);
     }
     
-    // Verifica si dos puntos están conectados (directamente o a través de un punto intermedio)
+    // Verifica si dos puntos están conectados por segmentos adyacentes de una banda
     private boolean estanConectados(Punto p1, Punto p2) {
-        // Verificar si hay una banda directa entre los puntos
-        for (Banda b : bandas) {
-            if (b.pasaPorPunto(p1) && b.pasaPorPunto(p2)) {
-                return true;
-            }
-        }
-        
-        // Verificar si están en la misma fila y hay un punto intermedio
-        if (p1.getFila() == p2.getFila()) {
-            char colMin = (char) Math.min(p1.getColumna(), p2.getColumna());
-            char colMax = (char) Math.max(p1.getColumna(), p2.getColumna());
+        for (Banda banda : bandas) {
+            List<Punto> puntos = banda.getPuntos();
             
-            // Si hay exactamente 2 columnas de diferencia (un punto intermedio)
-            if (colMax - colMin == 2) {
-                char colIntermedia = (char) (colMin + 1);
-                Punto puntoIntermedio = new Punto(colIntermedia, p1.getFila());
+            for (int i = 0; i < puntos.size() - 1; i++) {
+                Punto inicio = puntos.get(i);
+                Punto fin = puntos.get(i + 1);
                 
-                // Verificar si hay bandas que pasan por el punto intermedio
-                for (Banda b : bandas) {
-                    if (b.pasaPorPunto(puntoIntermedio)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        
-        // Verificar si están en la misma columna y hay un punto intermedio
-        if (p1.getColumna() == p2.getColumna()) {
-            int filaMin = Math.min(p1.getFila(), p2.getFila());
-            int filaMax = Math.max(p1.getFila(), p2.getFila());
-            
-            // Si hay exactamente 2 filas de diferencia (un punto intermedio)
-            if (filaMax - filaMin == 2) {
-                int filaIntermedia = filaMin + 1;
-                Punto puntoIntermedio = new Punto(p1.getColumna(), filaIntermedia);
-                
-                // Verificar si hay bandas que pasan por el punto intermedio
-                for (Banda b : bandas) {
-                    if (b.pasaPorPunto(puntoIntermedio)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        
-        // Verificar si están en la misma diagonal y hay un punto intermedio
-        int deltaFila = p2.getFila() - p1.getFila();
-        int deltaCol = p2.getColumna() - p1.getColumna();
-        
-        // Si la pendiente es 1 o -1 (diagonal) y hay exactamente 2 unidades de diferencia
-        if (Math.abs(deltaFila) == Math.abs(deltaCol) && Math.abs(deltaFila) == 2) {
-            int filaIntermedia = (p1.getFila() + p2.getFila()) / 2;
-            char colIntermedia = (char) ((p1.getColumna() + p2.getColumna()) / 2);
-            Punto puntoIntermedio = new Punto(colIntermedia, filaIntermedia);
-            
-            // Verificar si hay bandas que pasan por el punto intermedio
-            for (Banda b : bandas) {
-                if (b.pasaPorPunto(puntoIntermedio)) {
+                // Si estos dos puntos forman un segmento de la banda
+                if ((inicio.equals(p1) && fin.equals(p2)) || 
+                    (inicio.equals(p2) && fin.equals(p1))) {
                     return true;
                 }
             }
@@ -255,153 +174,34 @@ public class Tablero {
         return (columna - colMin) % 2 == 0;
     }
     
+    // Método simplificado para mostrar el tablero
     public void mostrar() {
         mostrar(false);
     }
     
-    // Método mostrar corregido para visualizar correctamente las bandas diagonales
     public void mostrar(boolean compacto) {
-        // Crear una matriz para representar el tablero con espacio para las bandas
-        int filaVisualMax = FILAS * 2 - 1;
-        int colVisualMax = COLUMNAS * 2 - 1;
-        char[][] tableroVisual = new char[filaVisualMax][colVisualMax];
+        char[][] tableroVisual = obtenerRepresentacionVisual();
+        int filaVisualMax = tableroVisual.length;
         
-        // Inicializar con espacios
-        for (int i = 0; i < tableroVisual.length; i++) {
-            for (int j = 0; j < tableroVisual[i].length; j++) {
-                tableroVisual[i][j] = ' ';
-            }
-        }
-        
-        // Colocar asteriscos en los puntos válidos del tablero
-        for (int fila = 1; fila <= FILAS; fila++) {
-            int desplazamiento = Math.abs(4 - fila);
-            char colMin = (char)('A' + desplazamiento);
-            char colMax = (char)('M' - desplazamiento);
-
-            // Salta uno y coloca uno
-            for (char col = colMin; col <= colMax; col += 2) {
-                Punto punto = new Punto(col, fila);
-
-                // Calcular posición en la matriz visual
-                int filaVisual = (fila - 1) * 2;
-                int colVisual = (col - 'A') * 2;
-
-                // Verificar si el punto es el centro de algún triángulo
-                boolean esCentroTriangulo = false;
-                boolean esCentroBlanco = false;
-
-                for (Triangulo t : triangulos) {
-                    if (t.getCentro() != null && t.getCentro().equals(punto)) {
-                        esCentroTriangulo = true;
-                        esCentroBlanco = t.esBlanco();
-                        break;
-                    }
-                }
-
-                if (esCentroTriangulo) {
-                    tableroVisual[filaVisual][colVisual] = '□';
-                } else {
-                    tableroVisual[filaVisual][colVisual] = '*';
-                }
-            }
-        }
-        
-        // Colocar bandas en el tablero
-        for (Banda banda : bandas) {
-            Punto inicio = banda.getInicio();
-            Punto fin = banda.getFin();
-            
-            // Calcular posiciones en la matriz visual
-            int filaInicioVisual = (inicio.getFila() - 1) * 2;
-            int colInicioVisual = (inicio.getColumna() - 'A') * 2;
-            int filaFinVisual = (fin.getFila() - 1) * 2;
-            int colFinVisual = (fin.getColumna() - 'A') * 2;
-            
-            // Determinar la dirección de la banda
-            int deltaFila = fin.getFila() - inicio.getFila();
-            int deltaCol = fin.getColumna() - inicio.getColumna();
-            
-            // Dibujar la banda según su dirección
-            if (deltaFila == 0) {
-                // Banda horizontal (Este-Oeste)
-                int filaVisual = filaInicioVisual;
-                int colMin = Math.min(colInicioVisual, colFinVisual);
-                int colMax = Math.max(colInicioVisual, colFinVisual);
-                
-                 for (int col = colInicioVisual + 1; col < colFinVisual; col += 4) {
-                        if (col + 2 < colVisualMax) {
-                            tableroVisual[filaInicioVisual][col] = '-';
-                            tableroVisual[filaInicioVisual][col + 1] = '-';
-                            tableroVisual[filaInicioVisual][col + 2] = '-';
-                        }
-                    }
-                
-                
-            } else if (deltaCol == 0) {
-                // Banda vertical (Norte-Sur)
-                int colVisual = colInicioVisual;
-                int filaMin = Math.min(filaInicioVisual, filaFinVisual);
-                int filaMax = Math.max(filaInicioVisual, filaFinVisual);
-                
-                for (int fila = filaMin + 1; fila < filaMax; fila++) {
-                    tableroVisual[fila][colVisual] = '|';
-                }
-            } else {
-                // Determinar si es una diagonal Noroeste-Sureste o Noreste-Suroeste
-                boolean esDiagonalNOSE = (deltaCol * deltaFila > 0); // Noroeste-Sureste
-                
-                // Calcular los pasos para recorrer la diagonal
-                int pasoFila = (deltaFila > 0) ? 1 : -1;
-                int pasoCol = (deltaCol > 0) ? 1 : -1;
-                
-                // Dibujar la diagonal
-                int filaActual = filaInicioVisual;
-                int colActual = colInicioVisual;
-                
-                while (filaActual != filaFinVisual || colActual != colFinVisual) {
-                    // Avanzar en la dirección diagonal
-                    if (filaActual != filaFinVisual) filaActual += pasoFila;
-                    if (colActual != filaFinVisual) colActual += pasoCol;
-                    
-                    // Si estamos en un punto intermedio (no en un asterisco), dibujar la banda
-                    if (filaActual % 2 != 0 || colActual % 2 != 0) {
-                        if (filaActual >= 0 && filaActual < filaVisualMax && 
-                            colActual >= 0 && colActual < colVisualMax) {
-                            // Usar el carácter adecuado según la dirección
-                            tableroVisual[filaActual][colActual] = esDiagonalNOSE ? '\\' : '/';
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Dibujar el tablero
+        // Imprimir el tablero
         System.out.println();
         
-        // Imprimir encabezado de columnas con espaciado adecuado
-        System.out.print(" ");
+        // Imprimir encabezado de columnas
+        System.out.print("  "); // Ajuste inicial para alinear con los puntos
         for (char c = 'A'; c <= 'M'; c++) {
             System.out.print(c + " ");
         }
         System.out.println();
-        
-        // Agregar dos líneas de separación entre el encabezado y el tablero
-        System.out.println();
         System.out.println();
         
-        // Imprimir el tablero
-        // Imprimir el tablero
+        // Imprimir el contenido del tablero
         for (int i = 0; i < filaVisualMax; i++) {
-            System.out.print(" ");  // ← No muestra números de fila
-
-            // Imprimir contenido de la fila
-            for (int j = 0; j < colVisualMax; j++) {
+            System.out.print(" ");
+            for (int j = 0; j < tableroVisual[i].length; j++) {
                 System.out.print(tableroVisual[i][j]);
             }
-
             System.out.println();
-
+            
             // Si estamos en modo compacto, omitir las filas intermedias
             if (compacto && i % 2 == 0 && i < filaVisualMax - 1) {
                 i++;
@@ -413,132 +213,251 @@ public class Tablero {
         }
     }
     
-    // Método para depurar la detección de triángulos (solo para pruebas)
-    public void depurarTriangulos() {
-        System.out.println("\n--- DEPURACIÓN DE TRIÁNGULOS ---");
+    // Método para dibujar una línea entre dos puntos en la matriz visual
+    private void dibujarLinea(char[][] tablero, Punto p1, Punto p2) {
+        // Calcular coordenadas visuales
+        int fila1 = (p1.getFila() - 1) * 2;
+        int col1 = (p1.getColumna() - 'A') * 2;
+        int fila2 = (p2.getFila() - 1) * 2;
+        int col2 = (p2.getColumna() - 'A') * 2;
         
-        // Generar todos los puntos válidos del tablero
-        Set<Punto> puntosValidos = generarPuntosTablero();
+        // Determinar el tipo de línea
+        int deltaFila = p2.getFila() - p1.getFila();
+        int deltaCol = p2.getColumna() - p1.getColumna();
         
-        // Imprimir todas las bandas
-        System.out.println("Bandas actuales: " + bandas.size());
-        for (int i = 0; i < bandas.size(); i++) {
-            Banda b = bandas.get(i);
-            System.out.println("Banda " + (i+1) + ": " + b.getInicio() + " a " + b.getFin());
+        // Línea horizontal (Este-Oeste)
+        if (deltaFila == 0) {
+            int filaVisual = fila1;
+            int colMin = Math.min(col1, col2);
+            int colMax = Math.max(col1, col2);
+        
+            // Asegurar que se dibujen los guiones entre los puntos
+            for (int col = colMin + 1; col < colMax; col++) {
+                tablero[filaVisual][col] = '-';
+            }
         }
+        // Línea diagonal
+        else {
+            // Dibujar diagonal usando Bresenham
+            int dx = Math.abs(col2 - col1);
+            int dy = Math.abs(fila2 - fila1);
+            int sx = col1 < col2 ? 1 : -1;
+            int sy = fila1 < fila2 ? 1 : -1;
+            int err = dx - dy;
         
-        // Imprimir todos los puntos válidos
-        System.out.println("\nPuntos válidos del tablero:");
-        for (Punto p : puntosValidos) {
-            System.out.print(p + " ");
-        }
-        System.out.println();
+            int x = col1;
+            int y = fila1;
         
-        // Verificar qué puntos están en cada banda
-        System.out.println("\nPuntos por los que pasan bandas:");
-        for (Punto p : puntosValidos) {
-            List<Integer> bandasQuePasan = new ArrayList<>();
-            for (int i = 0; i < bandas.size(); i++) {
-                if (bandas.get(i).pasaPorPunto(p)) {
-                    bandasQuePasan.add(i + 1);
+            char diagonal = (deltaFila * deltaCol > 0) ? '\\' : '/';
+        
+            while (true) {
+                if (x == col2 && y == fila2) break;
+            
+                int e2 = 2 * err;
+                if (e2 > -dy) {
+                    err -= dy;
+                    x += sx;
                 }
-            }
-            if (!bandasQuePasan.isEmpty()) {
-                System.out.println("  " + p + ": Bandas " + bandasQuePasan);
-            }
-        }
-        
-        // Identificar los puntos por los que pasan bandas
-        List<Punto> puntosConBandas = new ArrayList<>();
-        for (Punto p : puntosValidos) {
-            boolean tieneBanda = false;
-            for (Banda b : bandas) {
-                if (b.pasaPorPunto(p)) {
-                    tieneBanda = true;
-                    break;
+                if (e2 < dx) {
+                    err += dx;
+                    y += sy;
                 }
-            }
-            if (tieneBanda) {
-                puntosConBandas.add(p);
-            }
-        }
-        
-        System.out.println("\nPuntos con bandas:");
-        for (Punto p : puntosConBandas) {
-            System.out.print(p + " ");
-        }
-        System.out.println();
-        
-        // Verificar conexiones entre puntos
-        System.out.println("\nVerificando conexiones entre puntos:");
-        for (int i = 0; i < puntosConBandas.size(); i++) {
-            for (int j = i + 1; j < puntosConBandas.size(); j++) {
-                Punto p1 = puntosConBandas.get(i);
-                Punto p2 = puntosConBandas.get(j);
-                
-                boolean conectados = estanConectados(p1, p2);
-                System.out.println("  " + p1 + " - " + p2 + ": " + (conectados ? "Conectados" : "No conectados"));
-                
-                // Si están conectados, mostrar cómo están conectados
-                if (conectados) {
-                    // Verificar si hay una banda directa
-                    boolean bandaDirecta = false;
-                    for (Banda b : bandas) {
-                        if (b.pasaPorPunto(p1) && b.pasaPorPunto(p2)) {
-                            bandaDirecta = true;
-                            System.out.println("    Conectados directamente por una banda");
-                            break;
-                        }
-                    }
-                    
-                    if (!bandaDirecta) {
-                        // Verificar si están en la misma fila y hay un punto intermedio
-                        if (p1.getFila() == p2.getFila() && Math.abs(p1.getColumna() - p2.getColumna()) == 2) {
-                            char colIntermedia = (char) ((p1.getColumna() + p2.getColumna()) / 2);
-                            System.out.println("    Conectados a través del punto intermedio " + 
-                                              new Punto(colIntermedia, p1.getFila()));
-                        }
-                        // Verificar si están en la misma columna y hay un punto intermedio
-                        else if (p1.getColumna() == p2.getColumna() && Math.abs(p1.getFila() - p2.getFila()) == 2) {
-                            int filaIntermedia = (p1.getFila() + p2.getFila()) / 2;
-                            System.out.println("    Conectados a través del punto intermedio " + 
-                                              new Punto(p1.getColumna(), filaIntermedia));
-                        }
-                        // Verificar si están en la misma diagonal y hay un punto intermedio
-                        else if (Math.abs(p1.getFila() - p2.getFila()) == 2 && 
-                                Math.abs(p1.getColumna() - p2.getColumna()) == 2) {
-                            int filaIntermedia = (p1.getFila() + p2.getFila()) / 2;
-                            char colIntermedia = (char) ((p1.getColumna() + p2.getColumna()) / 2);
-                            System.out.println("    Conectados a través del punto intermedio " + 
-                                              new Punto(colIntermedia, filaIntermedia));
-                        }
+            
+                // Dibujar si no es un punto del tablero
+                if ((x != col1 || y != fila1) && (x != col2 || y != fila2)) {
+                    if (x >= 0 && x < tablero[0].length && y >= 0 && y < tablero.length) {
+                        tablero[y][x] = diagonal;
                     }
                 }
             }
         }
+    }
+    
+    // Método para obtener la representación visual del tablero como una matriz de caracteres
+    public char[][] obtenerRepresentacionVisual() {
+        // Crear una matriz para representar el tablero con espacio para las bandas
+        int filaVisualMax = FILAS * 2 - 1;
+        int colVisualMax = COLUMNAS * 2 - 1;
+        char[][] tableroVisual = new char[filaVisualMax][colVisualMax];
         
-        // Verificar todas las combinaciones posibles de 3 puntos
-        System.out.println("\nVerificando combinaciones de 3 puntos:");
-        for (int i = 0; i < puntosConBandas.size(); i++) {
-            for (int j = i + 1; j < puntosConBandas.size(); j++) {
-                for (int k = j + 1; k < puntosConBandas.size(); k++) {
-                    Punto p1 = puntosConBandas.get(i);
-                    Punto p2 = puntosConBandas.get(j);
-                    Punto p3 = puntosConBandas.get(k);
-                    
-                    // Verificar conexiones entre puntos
-                    boolean hayBandaP1P2 = estanConectados(p1, p2);
-                    boolean hayBandaP1P3 = estanConectados(p1, p3);
-                    boolean hayBandaP2P3 = estanConectados(p2, p3);
-                    
-                    System.out.println("Puntos: " + p1 + ", " + p2 + ", " + p3);
-                    System.out.println("  " + p1 + " - " + p2 + ": " + (hayBandaP1P2 ? "Conectados" : "No conectados"));
-                    System.out.println("  " + p1 + " - " + p3 + ": " + (hayBandaP1P3 ? "Conectados" : "No conectados"));
-                    System.out.println("  " + p2 + " - " + p3 + ": " + (hayBandaP2P3 ? "Conectados" : "No conectados"));
-                    
-                    boolean formanTriangulo = hayBandaP1P2 && hayBandaP1P3 && hayBandaP2P3;
-                    System.out.println("  ¿Forman triángulo? " + (formanTriangulo ? "SÍ" : "NO"));
-                    System.out.println();
+        // Inicializar con espacios
+        for (int i = 0; i < filaVisualMax; i++) {
+            for (int j = 0; j < colVisualMax; j++) {
+                tableroVisual[i][j] = ' ';
+            }
+        }
+        
+        // Colocar asteriscos en los puntos válidos del tablero
+        for (int fila = 1; fila <= FILAS; fila++) {
+            int desplazamiento = Math.abs(4 - fila);
+            char colMin = (char)('A' + desplazamiento);
+            char colMax = (char)('M' - desplazamiento);
+            
+            for (char col = colMin; col <= colMax; col += 2) {
+                Punto punto = new Punto(col, fila);
+                
+                // Calcular posición en la matriz visual
+                int filaVisual = (fila - 1) * 2;
+                int colVisual = (col - 'A') * 2;
+                
+                tableroVisual[filaVisual][colVisual] = '*';
+            }
+        }
+        
+        // Dibujar las bandas
+        for (Banda banda : bandas) {
+            List<Punto> puntos = banda.getPuntos();
+            
+            // Conectar puntos consecutivos
+            for (int i = 0; i < puntos.size() - 1; i++) {
+                Punto p1 = puntos.get(i);
+                Punto p2 = puntos.get(i + 1);
+                
+                dibujarLineaEnMatriz(tableroVisual, p1, p2);
+            }
+        }
+        
+        // Marcar los centros de los triángulos visualmente
+        for (Triangulo t : triangulos) {
+            Punto p1 = t.getPunto1();
+            Punto p2 = t.getPunto2();
+            Punto p3 = t.getPunto3();
+            
+            // Calcular las posiciones visuales de los tres puntos
+            int fila1 = (p1.getFila() - 1) * 2;
+            int col1 = (p1.getColumna() - 'A') * 2;
+            int fila2 = (p2.getFila() - 1) * 2;
+            int col2 = (p2.getColumna() - 'A') * 2;
+            int fila3 = (p3.getFila() - 1) * 2;
+            int col3 = (p3.getColumna() - 'A') * 2;
+            
+            // Ordenar los puntos por fila (de arriba a abajo)
+            int[] filas = {fila1, fila2, fila3};
+            int[] cols = {col1, col2, col3};
+            
+            // Ordenamiento simple de burbuja
+            for (int i = 0; i < 2; i++) {
+                for (int j = 0; j < 2 - i; j++) {
+                    if (filas[j] > filas[j + 1]) {
+                        // Intercambiar filas
+                        int tempFila = filas[j];
+                        filas[j] = filas[j + 1];
+                        filas[j + 1] = tempFila;
+                        
+                        // Intercambiar columnas correspondientes
+                        int tempCol = cols[j];
+                        cols[j] = cols[j + 1];
+                        cols[j + 1] = tempCol;
+                    }
+                }
+            }
+            
+            // Ahora filas[0] es el punto más alto, filas[2] es el más bajo
+            
+            // Para triángulos con un punto arriba y dos abajo
+            if (filas[0] < filas[1] && filas[1] == filas[2]) {
+                // Colocar el marcador en la fila intermedia, entre las columnas
+                int f = filas[0] + 1;
+                int c = (cols[1] + cols[2]) / 2;
+                
+                if (f >= 0 && f < filaVisualMax && c >= 0 && c < colVisualMax && 
+                    tableroVisual[f][c] == ' ') {
+                    tableroVisual[f][c] = t.esBlanco() ? '□' : '■';
+                }
+            }
+            // Para triángulos con dos puntos arriba y uno abajo
+            else if (filas[0] == filas[1] && filas[1] < filas[2]) {
+                // Colocar el marcador en la fila intermedia, entre las columnas
+                int f = filas[0] + 1;
+                int c = (cols[0] + cols[1]) / 2;
+                
+                if (f >= 0 && f < filaVisualMax && c >= 0 && c < colVisualMax && 
+                    tableroVisual[f][c] == ' ') {
+                    tableroVisual[f][c] = t.esBlanco() ? '□' : '■';
+                }
+            }
+            // Para triángulos con tres puntos en diferentes filas
+            else {
+                // Colocar el marcador en la fila intermedia
+                int f = filas[1];
+                int c = cols[1];
+                
+                // Buscar un espacio vacío cerca del punto intermedio
+                for (int df = -1; df <= 1; df++) {
+                    for (int dc = -1; dc <= 1; dc++) {
+                        int newF = f + df;
+                        int newC = c + dc;
+                        
+                        if (newF >= 0 && newF < filaVisualMax && newC >= 0 && newC < colVisualMax && 
+                            tableroVisual[newF][newC] == ' ') {
+                            tableroVisual[newF][newC] = t.esBlanco() ? '□' : '■';
+                            // Una vez colocado, salir de los bucles
+                            df = 2; // Forzar salida del bucle externo
+                            break;  // Salir del bucle interno
+                        }
+                    }
+                }
+            }
+        }
+        
+        return tableroVisual;
+    }
+    
+    // Método para dibujar una línea entre dos puntos en la matriz visual (sin imprimir mensajes de depuración)
+    private void dibujarLineaEnMatriz(char[][] tablero, Punto p1, Punto p2) {
+        // Calcular coordenadas visuales
+        int fila1 = (p1.getFila() - 1) * 2;
+        int col1 = (p1.getColumna() - 'A') * 2;
+        int fila2 = (p2.getFila() - 1) * 2;
+        int col2 = (p2.getColumna() - 'A') * 2;
+        
+        // Determinar el tipo de línea
+        int deltaFila = p2.getFila() - p1.getFila();
+        int deltaCol = p2.getColumna() - p1.getColumna();
+        
+        // Línea horizontal (Este-Oeste)
+        if (deltaFila == 0) {
+            int filaVisual = fila1;
+            int colMin = Math.min(col1, col2);
+            int colMax = Math.max(col1, col2);
+        
+            // Asegurar que se dibujen los guiones entre los puntos
+            for (int col = colMin + 1; col < colMax; col++) {
+                tablero[filaVisual][col] = '-';
+            }
+        }
+        // Línea diagonal
+        else {
+            // Dibujar diagonal usando Bresenham
+            int dx = Math.abs(col2 - col1);
+            int dy = Math.abs(fila2 - fila1);
+            int sx = col1 < col2 ? 1 : -1;
+            int sy = fila1 < fila2 ? 1 : -1;
+            int err = dx - dy;
+        
+            int x = col1;
+            int y = fila1;
+        
+            char diagonal = (deltaFila * deltaCol > 0) ? '\\' : '/';
+        
+            while (true) {
+                if (x == col2 && y == fila2) break;
+            
+                int e2 = 2 * err;
+                if (e2 > -dy) {
+                    err -= dy;
+                    x += sx;
+                }
+                if (e2 < dx) {
+                    err += dx;
+                    y += sy;
+                }
+            
+                // Dibujar si no es un punto del tablero
+                if ((x != col1 || y != fila1) && (x != col2 || y != fila2)) {
+                    if (x >= 0 && x < tablero[0].length && y >= 0 && y < tablero.length) {
+                        tablero[y][x] = diagonal;
+                    }
                 }
             }
         }

@@ -3,13 +3,13 @@ package triangulos;
 public class Jugada {
     private Punto inicio;
     private char direccion;
-    private int longitud;
+    private int uniones; 
     private boolean esBlanco;
     
-    public Jugada(Punto inicio, char direccion, int longitud, boolean esBlanco) {
+    public Jugada(Punto inicio, char direccion, int uniones, boolean esBlanco) {
         this.inicio = inicio;
         this.direccion = direccion;
-        this.longitud = longitud;
+        this.uniones = uniones;
         this.esBlanco = esBlanco;
     }
     
@@ -22,7 +22,7 @@ public class Jugada {
     }
     
     public int getLongitud() {
-        return longitud;
+        return uniones;
     }
     
     public boolean esBlanco() {
@@ -41,7 +41,6 @@ public class Jugada {
             case 'A': dirStr = "oeste"; break;
         }
         
-        return inicio.toString() + " -> " + dirStr + " (longitud " + longitud + ")";
+        return inicio.toString() + " -> " + dirStr + " (" + uniones + " uniones, " + (uniones + 1) + " puntos)";
     }
 }
-

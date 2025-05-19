@@ -39,7 +39,8 @@ public class Partida {
         System.out.println("\n¡Comienza la partida!");
         System.out.println("Jugador Blanco: " + jugadorBlanco.getNombre());
         System.out.println("Jugador Negro: " + jugadorNegro.getNombre());
-        System.out.println("Largo de bandas: " + config.getLargoBanda());
+        System.out.println("Largo de bandas por defecto: " + config.getLargoBanda());
+        System.out.println("Formato de jugada: D1D2 - Une 2 puntos consecutivos");
         
         int bandasColocadas = 0;
         boolean partidaTerminada = false;
@@ -50,10 +51,10 @@ public class Partida {
         while (!partidaTerminada && bandasColocadas < config.getCantidadBandas()) {
             String jugadorActual = turnoBlanco ? "Blanco (" + jugadorBlanco.getNombre() + ")" : "Negro (" + jugadorNegro.getNombre() + ")";
             System.out.println("\nTurno del jugador " + jugadorActual);
-            System.out.println("Triángulos - Blanco: " + triangulasBlanco + " | Negro: " + triangulosNegro);
-            System.out.print("Ingrese jugada (LetraFilaDirección, X para rendirse, H para historial, D para depurar): ");
-            
-            String entradaJugada = scanner.nextLine().toUpperCase();
+            System.out.println("Triángulos - Cantidad Blanco: " + triangulasBlanco + " | Cantidad Negro: " + triangulosNegro);
+            System.out.print("Ingrese jugada (LetraFilaDirecciónLongitud, X para rendirse, H para historial): ");
+        
+            String entradaJugada = scanner.nextLine().toUpperCase().trim();
             
             if (entradaJugada.equals("X")) {
                 System.out.println("El jugador " + jugadorActual + " se rinde.");
@@ -66,24 +67,71 @@ public class Partida {
                 mostrarHistorial();
                 continue; // No cambia el turno
             }
-            
-            if (entradaJugada.equals("D")) {
-                tablero.depurarTriangulos();
-                continue; // No cambia el turno
-            }
-            
+             
             try {
-                Jugada jugada = parsearJugada(entradaJugada);
-                
-                // Validar jugada
-                if (!esJugadaValida(jugada)) {
-                    System.out.println("Jugada inválida. Intente nuevamente.");
-                    continue; // No cambia el turno
+                // Parsear la jugada
+                char columna = entradaJugada.charAt(0);
+                int fila = Character.getNumericValue(entradaJugada.charAt(1));
+                char direccion = entradaJugada.charAt(2);
+                int longitud = entradaJugada.length() > 3 ? 
+                               Integer.parseInt(entradaJugada.substring(3)) : 
+                               config.getLargoBanda();
+                               
+                // Validar parámetros básicos
+                if (columna < 'A' || columna > 'M') {
+                    throw new IllegalArgumentException("Columna inválida (debe ser A-M)");
                 }
                 
-                // Realizar jugada
-                int nuevosTriangulos = tablero.colocarBanda(jugada.getInicio(), jugada.getDireccion(), 
-                                                          jugada.getLongitud(), turnoBlanco);
+                if (fila < 1 || fila > 7) {
+                    throw new IllegalArgumentException("Fila inválida (debe ser 1-7)");
+                }
+                
+                if (!esdireccionValida(direccion)) {
+                    throw new IllegalArgumentException("Dirección inválida (debe ser Q, E, D, C, Z, A)");
+                }
+                
+                if (longitud < 1 || longitud > 4) {
+                    throw new IllegalArgumentException("Longitud inválida (debe ser 1-4)");
+                }
+                
+                // Crear el punto de inicio
+                Punto inicio = new Punto(columna, fila);
+                
+                // Verificar si el punto inicial es válido
+                if (!tablero.esPuntoValido(inicio)) {
+                    throw new IllegalArgumentException("Punto inicial no válido en el tablero");
+                }
+                
+                // Generar los puntos de la banda según la dirección y longitud
+                List<Punto> puntosBanda = generarPuntosBanda(inicio, direccion, longitud);
+                
+                // Verificar que tengamos suficientes puntos
+                if (puntosBanda.size() < longitud) {
+                    throw new IllegalArgumentException("No se pueden generar " + longitud + 
+                                                      " puntos en esa dirección desde " + inicio);
+                }
+                
+                // Verificar requisito de contacto (a partir del 2do movimiento)
+                if (config.isRequiereContacto() && bandasColocadas > 0) {
+                    boolean tieneContacto = false;
+                    for (Punto p : puntosBanda) {
+                        if (tablero.tieneContacto(p)) {
+                            tieneContacto = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!tieneContacto) {
+                        throw new IllegalArgumentException("La banda debe tener contacto con una banda existente");
+                    }
+                }
+                
+                // Colocar la banda en el tablero
+                int nuevosTriangulos = tablero.colocarBanda(puntosBanda, turnoBlanco);
+                
+                // Crear y guardar la jugada en el historial
+                Jugada jugada = new Jugada(inicio, direccion, longitud, turnoBlanco);
+                jugadas.add(jugada);
                 
                 // Actualizar contadores de triángulos
                 if (turnoBlanco) {
@@ -92,27 +140,26 @@ public class Partida {
                     triangulosNegro += nuevosTriangulos;
                 }
                 
-                // Guardar jugada en historial
-                jugadas.add(jugada);
+                // Incrementar contador de bandas
                 bandasColocadas++;
                 
-                // Guardar copia del tablero para historial si es necesario
+                // Guardar copia del tablero para historial
                 if (config.getCantidadTableros() > 1) {
                     historialTableros.add(new Tablero(tablero));
                     if (historialTableros.size() > config.getCantidadTableros()) {
-                        historialTableros.remove(0); // Mantener solo la cantidad configurada
+                        historialTableros.remove(0);
                     }
                 }
                 
-                // Mostrar tablero actualizado
+                // Mostrar el tablero actualizado
                 mostrarTableros();
                 
-                // Cambiar turno
+                // Cambiar el turno
                 turnoBlanco = !turnoBlanco;
                 
             } catch (Exception e) {
                 System.out.println("Error en la jugada: " + e.getMessage());
-                System.out.println("Formato correcto: LetraFilaDirección (ej: D1C)");
+                System.out.println("Formato correcto: D1C4 - Une 4 puntos consecutivos");
             }
         }
         
@@ -139,89 +186,78 @@ public class Partida {
         System.out.println("Triángulos - Blanco: " + triangulasBlanco + " | Negro: " + triangulosNegro);
     }
     
-    private Jugada parsearJugada(String entrada) {
-        if (entrada.length() < 3) {
-            throw new IllegalArgumentException("Entrada demasiado corta");
-        }
-        
-        // Extraer letra (columna)
-        char columna = entrada.charAt(0);
-        if (columna < 'A' || columna > 'M') {
-            throw new IllegalArgumentException("Columna inválida (debe ser A-M)");
-        }
-        
-        // Extraer fila
-        int fila;
-        try {
-            fila = Character.getNumericValue(entrada.charAt(1));
-            if (fila < 1 || fila > 7) {
-                throw new IllegalArgumentException("Fila inválida (debe ser 1-7)");
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Fila inválida");
-        }
-        
-        // Extraer dirección
-        char direccion = entrada.charAt(2);
-        if (!esdireccionValida(direccion)) {
-            throw new IllegalArgumentException("Dirección inválida (debe ser Q, E, D, C, Z, A)");
-        }
-        
-        // Usar el largo configurado
-        int longitud = config.getLargoBanda();
-        
-        Punto inicio = new Punto(columna, fila);
-        return new Jugada(inicio, direccion, longitud, turnoBlanco);
-    }
-    
     private boolean esdireccionValida(char direccion) {
         return direccion == 'Q' || direccion == 'E' || direccion == 'D' || 
                direccion == 'C' || direccion == 'Z' || direccion == 'A';
     }
     
-    private boolean esJugadaValida(Jugada jugada) {
-        // Verificar si el punto inicial está dentro del tablero
-        Punto inicio = jugada.getInicio();
-        if (inicio.getColumna() < 'A' || inicio.getColumna() > 'M' || 
-            inicio.getFila() < 1 || inicio.getFila() > 7) {
-            return false;
-        }
+    // Método para generar todos los puntos de una banda
+    private List<Punto> generarPuntosBanda(Punto inicio, char direccion, int longitud) {
+        List<Punto> puntos = new ArrayList<>();
+        puntos.add(inicio);
         
-        // Verificar si el punto final está dentro del tablero
-        Punto fin = calcularPuntoFinal(inicio, jugada.getDireccion(), jugada.getLongitud());
-        if (fin == null || fin.getColumna() < 'A' || fin.getColumna() > 'M' || 
-            fin.getFila() < 1 || fin.getFila() > 7) {
-            return false;
+        // Si la longitud es 0, solo devolver el punto inicial
+        if (longitud <= 0) {
+            return puntos;
         }
+        // Para longitud 1 o más, necesitamos generar puntos adicionales
         
-        // Verificar si requiere contacto (a partir del 2do movimiento)
-        if (config.isRequiereContacto() && jugadas.size() > 0) {
-            return tablero.tieneContacto(inicio) || tablero.tieneContacto(fin);
-        }
-        
-        return true;
-    }
-    
-    private Punto calcularPuntoFinal(Punto inicio, char direccion, int longitud) {
-        char columnaInicio = inicio.getColumna();
-        int filaInicio = inicio.getFila();
+        // Determinar incrementos según dirección
+        int incFila = 0;
+        int incCol = 0;
         
         switch (direccion) {
             case 'Q': // Noroeste
-                return new Punto((char)(columnaInicio - longitud), filaInicio - longitud);
+                incFila = -1;
+                incCol = -1;
+                break;
             case 'E': // Noreste
-                return new Punto((char)(columnaInicio + longitud), filaInicio - longitud);
-            case 'D': // Este
-                return new Punto((char)(columnaInicio + longitud), filaInicio);
+                incFila = -1;
+                incCol = 1;
+                break;
+            case 'D': // Este (horizontal)
+                incFila = 0;
+                incCol = 2; // Incremento de 2 para saltar al siguiente punto válido
+                break;
             case 'C': // Sureste
-                return new Punto((char)(columnaInicio + longitud), filaInicio + longitud);
+                incFila = 1;
+                incCol = 1;
+                break;
             case 'Z': // Suroeste
-                return new Punto((char)(columnaInicio - longitud), filaInicio + longitud);
-            case 'A': // Oeste
-                return new Punto((char)(columnaInicio - longitud), filaInicio);
-            default:
-                return null;
+                incFila = 1;
+                incCol = -1;
+                break;
+            case 'A': // Oeste (horizontal)
+                incFila = 0;
+                incCol = -2; // Decremento de 2 para saltar al siguiente punto válido
+                break;
         }
+        
+        // Generar puntos adicionales
+        char col = inicio.getColumna();
+        int fila = inicio.getFila();
+        
+        // Debug output
+        System.out.println("Generando puntos desde " + inicio + " en dirección " + direccion + " con longitud " + longitud);
+        System.out.println("Incrementos: fila=" + incFila + ", columna=" + incCol);
+        
+        for (int i = 1; i < longitud + 1; i++) {
+            col = (char)(col + incCol);
+            fila = fila + incFila;
+            
+            Punto nuevoPunto = new Punto(col, fila);
+            System.out.println("Punto generado: " + nuevoPunto);
+            
+            // Verificar si el punto es válido
+            if (tablero.esPuntoValido(nuevoPunto)) {
+                puntos.add(nuevoPunto);
+            } else {
+                System.out.println("Advertencia: Punto fuera del tablero: " + nuevoPunto);
+                break;
+            }
+        }
+        
+        return puntos;
     }
     
     private void mostrarTableros() {
@@ -229,13 +265,77 @@ public class Partida {
             // Mostrar solo el tablero actual
             tablero.mostrar();
         } else {
-            // Mostrar varios tableros
-            for (int i = 0; i < historialTableros.size(); i++) {
-                if (i > 0) {
+            // Mostrar varios tableros lado a lado
+            int cantidadTableros = Math.min(historialTableros.size(), config.getCantidadTableros());
+            
+            // Crear una representación visual de cada tablero
+            char[][][] representacionesTableros = new char[cantidadTableros][][];
+            
+            // Invertir el orden de los tableros para que el más reciente esté a la derecha
+            for (int i = 0; i < cantidadTableros; i++) {
+                // Obtener tableros en orden inverso (del más reciente al más antiguo)
+                int indice = historialTableros.size() - 1 - i;
+                representacionesTableros[cantidadTableros - 1 - i] = historialTableros.get(indice).obtenerRepresentacionVisual();
+            }
+            
+            // Calcular el ancho exacto de cada tablero
+            int anchoTablero = representacionesTableros[0][0].length;
+            
+            // Imprimir encabezados de columnas para cada tablero
+            System.out.println();
+            
+            // Primera línea: letras de columnas
+            for (int t = 0; t < cantidadTableros; t++) {
+                // Espacio inicial para alinear con el primer punto
+                System.out.print(" ");
+                
+                // Imprimir letras solo donde hay puntos
+                for (char c = 'A'; c <= 'M'; c++) {
+                    int colPos = (c - 'A') * 2;
+                    if (colPos < anchoTablero) {
+                        // Verificar si hay un asterisco en esta columna
+                        boolean hayPunto = false;
+                        for (int fila = 0; fila < representacionesTableros[t].length; fila++) {
+                            if (representacionesTableros[t][fila][colPos] == '*') {
+                                hayPunto = true;
+                                break;
+                            }
+                        }
+                        
+                        if (hayPunto) {
+                            System.out.print(c + " ");
+                        } else {
+                            System.out.print("  ");
+                        }
+                    }
+                }
+                
+                // Espacio entre tableros (exactamente 3 espacios)
+                if (t < cantidadTableros - 1) {
                     System.out.print("   ");
                 }
-                historialTableros.get(i).mostrar(true); // Mostrar en modo compacto
             }
+            
+            System.out.println();
+            System.out.println();
+            
+            // Imprimir filas de todos los tableros
+            int filas = representacionesTableros[0].length;
+            for (int fila = 0; fila < filas; fila++) {
+                for (int t = 0; t < cantidadTableros; t++) {
+                    System.out.print(" ");
+                    for (int col = 0; col < representacionesTableros[t][fila].length; col++) {
+                        System.out.print(representacionesTableros[t][fila][col]);
+                    }
+                    
+                    // Espacio entre tableros (exactamente 3 espacios)
+                    if (t < cantidadTableros - 1) {
+                        System.out.print("   ");
+                    }
+                }
+                System.out.println();
+            }
+            System.out.println();
         }
     }
     
@@ -246,11 +346,22 @@ public class Partida {
             return;
         }
         
+        String historial = "";
         for (int i = 0; i < jugadas.size(); i++) {
             Jugada j = jugadas.get(i);
-            String jugador = j.esBlanco() ? "Blanco" : "Negro";
-            System.out.println((i + 1) + ". " + jugador + ": " + j);
+            // Formato básico: LetraFilaDirecciónLongitud
+            historial += j.getInicio().getColumna();
+            historial += j.getInicio().getFila();
+            historial += j.getDireccion();
+            historial += j.getLongitud();
+            
+            // Añadir coma si no es la última jugada
+            if (i < jugadas.size() - 1) {
+                historial += ", ";
+            }
         }
+        
+        System.out.println(historial);
     }
     
     private void mostrarAnimacionVictoria() {
@@ -269,7 +380,7 @@ public class Partida {
             // Mostrar la animación varias veces
             for (int animacion = 0; animacion < 1; animacion++) {
 
-                // Primer patrón - forma de rombo/estrella con estrellas (más a la derecha)
+                // Primer patrón - forma de rombo/estrella con estrellas
                 System.out.println("          " + GREEN + "*" + RESET + "     " + 
                                    PURPLE + "*" + RESET + "     " + 
                                    GREEN + "*" + RESET);
